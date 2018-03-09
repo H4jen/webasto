@@ -1,8 +1,21 @@
 #include <Arduino.h>
 //#include <HardwareSerial.h>
 #include <SoftwareSerial.h>
+#include <Wire.h>
+#include <LCD.h>
+#include <LiquidCrystal_I2C.h>
 //#include <avr/io.h>
 //#include <util/delay.h>
+
+#define I2C_ADDR    0x27  // Define I2C Address where the PCF8574A is
+#define BACKLIGHT_PIN     3
+#define En_pin  2
+#define Rw_pin  1
+#define Rs_pin  0
+#define D4_pin  4
+#define D5_pin  5
+#define D6_pin  6
+#define D7_pin  7
  
 #define BLINK_DELAY_MS 400
 #define BAUD_RATE 300
@@ -26,6 +39,7 @@ uint8_t txPin=11;
 
 // set up a new serial port
 SoftwareSerial mySerial =  SoftwareSerial(rxPin,txPin);
+LiquidCrystal_I2C	lcd(I2C_ADDR,En_pin,Rw_pin,Rs_pin,D4_pin,D5_pin,D6_pin,D7_pin);
 
 void init_board() {
  
@@ -37,6 +51,17 @@ void init_board() {
  DPRINTLN("Hello world");
  delay(2000);
 #endif
+
+  lcd.begin (20,4);
+
+  // Switch on the backlight
+  lcd.setBacklightPin(BACKLIGHT_PIN,POSITIVE);
+  lcd.setBacklight(HIGH);
+  lcd.home ();                   // go home
+
+  lcd.print("Webasto debug inter.");  
+  lcd.setCursor ( 0, 1 );        // go to the 2nd line
+  lcd.print("Just to test stuff!");
 }
 
 
