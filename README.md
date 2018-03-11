@@ -11,7 +11,7 @@ The arduino UNO was selected together with a raspberry pi (for remote developmen
 W-bus protocol
 -------------
 
-The W-bus protocol is a bidirectional link using single physical line for communication. On the physical layer it uses 0 -> 12V signaling. THe w-bus is a K-line interface. The K-line interface is descriobed in ISO 9141.
+The W-bus protocol is a bidirectional link using single physical line for communication. On the physical layer it uses 0 -> 12V signaling. THe w-bus is a K-line interface. The K-line interface is descriobed in ISO 9141. Normally the K-line is interfaced using integrated chips. But is this project a simple transistor cascade was selected.
 
 HW interface
 ------------
