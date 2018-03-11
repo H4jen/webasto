@@ -16,3 +16,5 @@ The W-bus protocol is a bidirectional link using single physical line for commun
 HW interface
 ------------
 THe HW interface is simulated using LTspice from linear tech, which is an excellent freeware implmentation of SPICE. The HW interface is a TTL to W-bus (K-line) converter using standard resistors and NPN transistors.
+
+![Alt text](./HW_interface_Wbus.jpg?raw=true "Hw interface")
