@@ -1,17 +1,20 @@
 # webasto
+Mostly because my webasto air top evo 40 broke down and I was told to send the unit back to repair shop for SW reset in order to get it working again. I decided to put some effort into understanding and hopefully be able to controll the heater without sending things back to repair shop in the future.
 
 The goal of this project is the following:
 
-1) Implement HW interface that can talk to the webasto implemented W-bus
-2) Implement SW that sniffs the webasto traffic
+1) Implement HW interface that can talk to the webasto implemented W-bus (K-line) using arduino HW and simple HW TTL/K-line interface.
+2) Implement SW that can sniff the webasto traffic
 3) Implement SW that can talk to the webasto
+4) Map protocol used to communicate with my webasto air top evo 40. May be scalable to other versions??
+5) Build diagnostic box with status LCD display that monitors the Webasto heater.
 
 The arduino UNO was selected together with a raspberry pi (for remote development) was selected in this project.
 
 W-bus protocol
 -------------
 
-The W-bus protocol is a bidirectional link using single physical line for communication. On the physical layer it uses 0 -> 12V signaling. THe w-bus is a K-line interface. The K-line interface is descriobed in ISO 9141. Normally the K-line is interfaced using integrated chips. But is this project a simple transistor cascade was selected.
+The W-bus protocol is a bi-directional link using single physical line for communication. On the physical layer it uses 0 -> 12V signaling. The w-bus is a K-line interface. The K-line interface is described in ISO 9141. Normally the K-line is interfaced using integrated chips. But is this project a simple transistor cascade was selected. The K-line is held in high state (Vbat).
 
 HW interface
 ------------
