@@ -38,5 +38,6 @@ The above circuit was simulated. The resulting curves with TX TTL baudrate 9600 
 
 Webasto <-> PC arduino sniffer
 ----------------------
-Using arduino and together with a the RX parts of the above HW interface a sniffer was built and connected just to listen to the traffic between the Webasto air top evo 40 and the WTT software. Picture below shows the setup.
+Using arduino and together with a the RX parts of the above HW interface a sniffer was built and connected just to listen to the traffic between the Webasto air top evo 40 and the WTT software. The PC is connected viw ODB II inteface (RS232 + LM339 comp + misc passive) to the K-line at the smartcontrol/multicontrol of the webasto heater.
+Picture below shows the setup.
 
