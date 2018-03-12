@@ -17,7 +17,9 @@
 #define D6_pin  6
 #define D7_pin  7
  
-#define BLINK_DELAY_MS 400
+#define INVERT_SIGNAL true
+
+#define BLINK_DELAY_MS 2400
 #define BAUD_RATE 300
 
 #define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
@@ -38,7 +40,7 @@ int8_t rxPin=10;
 uint8_t txPin=11;
 
 // set up a new serial port
-SoftwareSerial mySerial =  SoftwareSerial(rxPin,txPin);
+SoftwareSerial mySerial =  SoftwareSerial(rxPin,txPin,INVERT_SIGNAL);
 LiquidCrystal_I2C	lcd(I2C_ADDR,En_pin,Rw_pin,Rs_pin,D4_pin,D5_pin,D6_pin,D7_pin);
 
 void init_board() {
