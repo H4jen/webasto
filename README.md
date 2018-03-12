@@ -14,9 +14,15 @@ The arduino UNO was selected together with a raspberry pi (for remote developmen
 W-bus protocol
 -------------
 
-The W-bus protocol is a bi-directional link using single physical line for communication. On the physical layer it uses 0 -> 12V signaling. The w-bus is a K-line interface. The K-line interface is described in ISO 9141. Normally the K-line is interfaced using integrated chips. But is this project a simple transistor cascade was selected. The K-line is held in high state (Vbat).
+The W-bus protocol is a bi-directional link using single physical line for communication. On the physical layer it uses 0 -> 12V signaling. The w-bus is a K-line interface. The K-line interface is described in ISO 9141. Normally the K-line is interfaced using integrated chips. But is this project a simple transistor cascade was selected.
 
 This project uses parts of the libwbus project found here: https://sourceforge.net/projects/libwbus/
+
+On physicla layer the line uses 2400 baud 8E1 format. The protocol is packet based with the following structure
+
+Header-length-command-data-checksum.
+
+More information on the protocol can be found in the repo in text file: webasto_wbus.txt (stolen from libwbus repo)
 
 
 HW interface
