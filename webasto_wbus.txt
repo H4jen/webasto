@@ -1,0 +1,686 @@
+W-Bus protocol description
+
+Last time edited: 2011-01-05 (year-month-day)
+
+This is all guess work, observing W-Bus devices externally. No decompilation
+of binaries or anthing like that was done.
+
+W-Bus is elektrically identic to OBDII interfaces. It works using a open 
+colector serial line at 2400 Baud and 8E1 format (even parity).
+
+Connections of a Thermo Top V heater
+8-pin connector
+Pin 1: On / Off supposedly, but does not work.
+Pin 2: W-Bus (diagnosis or Webasto 1533 type timer clock)
+Pin 3: Supposedly a temperature sensor goes here for supplemental heating
+Pin 4: CAN low
+Pin 5: metering/dosing fuel pump
+Pin 6: Solenoid Valve for coolant circuit switching.
+Pin 7: CAN high
+Pin 8: Output for cabin ventilation fan control
+
+2-pin connector
+Pin 1: Battery plus
+Pin 2: ground
+
+3-pin connector
+Pin 1: no idea
+Pin 2: circulation pump +
+Pin 3: circulation pump ground
+
+Remarks:
+ All (most) numbers are in hexadecimal.
+ Since rx and tx lines are connected together to a single wire, all
+transmissions are echoed back to the transmitter.
+
+Initialization
+BREAK set for 50ms
+BREAK reset and wait 50ms
+After that, the following transaction takes place
+TX f4 03 51 0a ac
+RX 4f 04 d1 0a 33 a3
+TX f4 03 51 0b ad
+RX 4f 0b d1 0b 50 51 33 35 20 53 48 20 82
+TX f4 03 51 0c aa
+RX 4f 0a d1 0c 71 7c c4 e7 3f 80 00 09
+TX f4 02 38 ce
+RX 4f 09 b8 0b 00 00 00 00 03 dd 2b
+
+The heater does not seem to respond without the break sequence. But it is
+not really clear what its purpose is.
+
+The W-Bus protocol is packet based. Transmissions are always as complete
+packets, with a address header, length, payload and checksum. The basic
+structure is:
+
+Header length command data checksum
+
+Header:
+comprises one byte. Each nibble is a 4 bit device address. The higher nibble
+is the sender address, the lower nibble is the destination address.
+The address of a Thermo Top V heater is 4, of the diagnosis software is 15,
+and the 1533 type timer uses the address 3. The Telestart module uses
+address 2.
+
+Length:
+One byte, representing the total amount of transmitted byte - 2.
+
+command:
+Usually the first payload byte represents sort of a global category of the
+packet. It can be followed by some sort of subcategory or index, but not
+necessarilly. When a device answers, it sends this byte back, but the MSB 
+is set, as some kind of acknowledge. The subcategory if any, is also
+included in a device response.
+
+Data:
+Any amount of bytes, limited only by the fact that one byte is used for the
+packet length. Usually packets are not longer than around 32 bytes. 
+
+Checksum:
+Is the XOR of all bytes.
+
+Example:
+
+Client sends:
+0xf4 0x03 0x50 0x0f 0xa8
+
+0xf4: Address header
+0x03: 3 bytes length inklusive Checksum
+0x50: Bit 7 ist null. command 0x50 (read sensor)
+0x0f: Index 0x0f, thus read sensor 15.
+0xa8: Checksum (=0xf4 xor 0x03 xor 0x50 xor 0x0f)
+
+The heater answers:
+0x4f 0x08 0xd0 0x0f 0x00 0x00 0x00 0x00 0x00 0x98
+
+0x4f: Address header
+0x08: 8 bytes, including Checksum
+0xd0: Bit 7 is 1 (ack)
+	command 0x50 acknowledged (= 0xd0 & 0x7f)
+0x0f: Index 0x0f acknowledged.
+0x00 0x00 0x00 0x00 0x00: the requested values
+0x98: Checksum (=0x4f xor 0x08 xor 0xd0 xor 0x0f xor 0x00 xor ...0x00)
+
+Command:
+(Bit 7 is 0 if the client does transmit, 1 if the heater answers)
+
+Known commands so far
+
+Command 0x10
+  Shutdown. No data. Afterwards sensor 0x50 is 0x03
+von 0x03 0x03 auf 0x03 0x01 zurück gekehrt. Später dann auf 0x03 0x00.
+
+Command 020
+  One byte data (operating time in minutes). Just turn on the single only
+mode that is available. Other similar commands are more specific.
+
+Command 0x21
+  Parking heater on. One byte data for length of heating in minutes
+TX f4 03 21 3b ed 
+RX 4f 03 a1 3b d6 
+
+In some cases, this sort of NAK occurrs:
+RX 4F 04 7F 21 33 26
+
+Command 0x22
+  Turn on ventilation. One byte data for length of ventilation in minutes
+TX f4 03 22 3b ee 
+RX 4f 03 a2 3b d5
+
+Command 0x23
+  Turn on supplemental heating. One byte data for length of heating in minutes
+TX f4 03 23 3b ef 
+RX 4f 03 a3 3b d4 
+
+Command 0x24
+  Circulation pump external control
+
+Command 025
+  Boost mode, whatever boost mode is...
+
+Command 0x38
+  The Diagnosis issues this command once. It seems to be acknowlegded. No
+idea what it is for.
+TX f4 02 38 ce    
+RX 4f 09 b8 0b 00 00 00 00 03 dd 2b  
+
+Command 0x44
+  Observed after any "turn on" command. It is sort of a keep alive of the
+  operating mode. The same command byte from the "turn on" message is used
+  to reference that specific mode which is currently running.
+TX f4 04 44 21 00 95
+RX 4f 03 c4 00 88 42 
+It seems like that the heater acknowledges this for ever. So it is a good
+idea to stop issuing this command if the heater device is expected to stop,
+or perhaps by reading a sensor an detecting that way that the heater is not
+running anymore. If not this might cause a never ending keep alive cycle.
+
+Command 0x45
+  Component test.
+  Data format:
+    1 byte component index
+      1: Combustion Fan
+      2: Fuel Pump
+      3: Glow Plug
+      4: Circulation Pump
+      5: Vehicle Fan Relays
+      6-8: Not used by TT-V
+      9: Solenoid Valve 
+      10-14: Not used by TT-V
+      15: Fuel Prewarming
+      16: Not used by TT-V
+
+    1 byte: Time to turn on device in seconds for testing.
+    2 bytes: Magnitude value, according to selected component and WBUS code.
+      Percent: 2nd byte ist 0.5 Prozent pro bit (2 ~> 1%).
+      Hertz: 2nd byte 1/20 Hertz pro bit (20 ~> 1 Hertz).
+      RPM: 1st byte MSB, 2nd byte LSB of RPM value.
+
+Command 0x50
+  Sensoren, bzw Status abfragen. Hat ein byte daten (index)
+  Index 03: Bitfields indicating operation of different subsystems.
+  Daten: 
+  1 byte: Index of what should be indicated. Possible responses below. Heading
+  number is the amount of bytes of the response.
+    02: Status flags (bitmasks below):
+      byte 0
+       0x10: Suplemental heater request
+       0x01: Main switch
+      byte 1
+       0x01: Summer (season)
+      byte 2
+       0x10: Generator signal D+
+      byte 3
+       0x10: boost mode
+       0x01: auxiliary drive
+      byte 4:
+       0x01: ignition (terminal 15)
+
+    03: On/Off flags of different subsystems
+    1 byte: Bitfield of components (operating is signaled by bits set to 1):
+      0x01 Combustion Air Fan (CAF)
+      0x02 Glowplug / Spark transmitter (ST)
+      0x04 Fuel Pump
+      0x08 Circulation Pump (CP
+      0x10 Vehicle Fan Relay (VFR)
+      0x20 Nozzle stock heating (NSH)
+      0x40 Flame indicator (FI)
+
+    04: Fuel type, max heat time and factor for shortening ventilation time
+        (but details are unclear). 3 bytes. Example: 0x1d, 0x3c, 0x3c
+
+    05: Operational measurements
+     byte0: Temperature with  50 C offset (20 C is value=70)
+     byte1,2: Voltage in mili Volt, big endian
+     byte3: Flame detector (set 0x01, not set 0x00)
+     byte4,5: Heating power in watts, big endian
+     byte6,7:  Flame detector resistance in mili Ohm, big endian
+
+    06: Operating times 
+    bytes:
+     byte0,1: Working hours
+     byte2: Working minutes
+     byte3,4: Operating hours
+     byte5: Operating minutes
+     byte6,7: Start counter
+
+    07:
+     byte0 Operating state
+      0x00 Burn out
+      0x01 Deactivation
+      0x02 Burn out ADR (has something to due with hazardous substances transpotation)
+      0x03 Burn out Ramp
+      0x04 Off state
+      0x05 Combustion process part load
+      0x06 Combustion process full load
+      0x07 Fuel supply
+      0x08 Combustion air fan start
+      0x09 Fuel supply interruption
+      0x0a Diagnostic state
+      0x0b Fuel pump interruption
+      0x0c EMF measurement
+      0x0d Debounce
+      0x0e Deactivation
+      0x0f Flame detector interrogation
+      0x10 Flame detector cooling
+      0x11 Flame detector measuring phase
+      0x12 Flame detector measuring phase ZUE
+      0x13 Fan start up
+      0x14 Glow plug ramp
+      0x15 Heater interlock
+      0x16 Initialization
+      0x17 Fuel bubble compensation
+      0x18 Fan cold start-up
+      0x19 Cold start enrichment
+      0x1a Cooling
+      0x1b Load change PL-FL
+      0x1c Ventilation
+      0x1d Load change FL-PL
+      0x1e New initialization
+      0x1f Controlled operation
+      0x20 Control iddle period
+      0x21 Soft start
+      0x22 Savety time
+      0x23 Purge
+      0x24 Start
+      0x25 Stabilization
+      0x26 Start ramp
+      0x27 Out of power
+      0x28 Interlock
+      0x29 Interlock ADR (Australian design rules)
+      0x2a Stabilization time
+      0x2b Change to controlled operation
+      0x2c Decision state
+      0x2d Prestart fuel supply
+      0x2e Glowing
+      0x2f Glowing power control
+      0x30 Delay lowering
+      0x31 Sluggish fan start
+      0x32 Additional glowing
+      0x33 Ignition interruption
+      0x34 Ignition
+      0x35 Intermittent glowing
+      0x36 Application monitoring
+      0x37 Interlock save to memory
+      0x38 Heater interlock deactivation
+      0x39 Output control
+      0x3a Circulating pump control
+      0x3b Initialization uP
+      0x3c Stray light interrogation
+      0x3d Prestart
+      0x3e Pre-ignition
+      0x3f Flame ignition
+      0x40 Flame stabilization
+      0x41 Combustion process parking heating
+      0x42 Combustion process suppl. heating
+      0x43 Combustion failure failure heating
+      0x44 Combustion failure suppl. heating
+      0x45 Heater off after run
+      0x46 Control iddle after run
+      0x47 After-run due to failure
+      0x48 Time-controlled after-run due to failure
+      0x49 Interlock circulation pump
+      0x4a Control iddle after parking heating
+      0x4b Control iddle after suppl. heating
+      0x4c Control iddle period suppl. heating with circulation pump
+      0x4d Circulation pump without heating function
+      0x4e Waiting loop overvoltage
+      0x4f Fault memory update
+      0x50 Waiting loop
+      0x51 Component test
+      0x52 Boost
+      0x53 Cooling
+      0x54 Heater interlock permanent
+      0x55 Fan iddle
+      0x56 Break away
+      0x57 Temperature interrogation
+      0x58 Prestart undervoltage
+      0x59 Accident interrogation
+      0x5a After-run solenoid valve
+      0x5b Fault memory update solenoid valve
+      0x5c Timer-controlled after-run solenoid valve
+      0x5d Startup attempt
+      0x5e Prestart extension
+      0x5f Combustion process
+      0x60 Timer-controlled after-run due to undervoltage
+      0x61 Fault memory update prior switch off
+      0x62 Ramp full load
+    byte1 Operating state state number
+    byte2 Device state bit field
+      0x01 STFL
+      0x02 UEHFL
+      0x04 SAFL
+      0x08 RZFL
+    byte3,4,5: Unknown      
+
+    10: burning duration, PH, SH, at powerlevels 0.33,34..66,67..100,>100 each    
+    11: Working duration PH (park heating) and SH (supplemental heating)
+    12: Start counters
+     byte0,1 PH start counter
+     byte2,3 SH start counter
+     byte4,5 TRS counter (Territories and Regional Support ? Thermal Reed Switch ?)
+
+    15: Subsystems status
+     byte0: Glow plug power in percent *2
+     byte1: Fuel pump pulse frequency in Hz *2
+     byte2: Combustion air fan in percent*2
+     byte3:
+     byte4: Circulation pump percent*2
+
+    17: lower and upper temperature thresholds (50 C offset one unsigned byte each)
+
+    18: Ventilation duration (2bytes hours big endian and one byte
+          minutes, just like all other time values)
+
+    19: Fuel prewarming status
+      2 bytes: Fuel prewarming PTC resistance in mili ohm, big endian
+      2 bytes: Fuel prewarming power in watts
+
+    20: spark transmision
+
+Command 0x51 read stuff
+  Index 0x01: Device ID Number
+  Index 0x02: Hardware version (KW/Year), Software version, Software version EEPROM
+  Index 0x03: Data Set ID Number
+  Index 0x04: Control Unit Herstellungsdatum (Tag monat jahr je ein byte)
+  Index 0x05: Heater manufacture date (Day of month, month, year. Each one byte)
+  Index 0x06: 1 byte, no idea
+  Index 0x07: Customer ID Number (i.e. VW Part number)
+  Index 0x09: Serial Number
+
+  Index 0x0a: W-BUS version. 1 byte, each nibble is one digit. 0x33 means version 3.3
+
+  Index 0x0b: Device Name: ASCII Text string.
+  Index 0x0c: W-BUS code. Flags of supported subsystems (bitmasks below).
+    byte0
+     0x01 unknown (ZH)
+     0x08 Simple on/off control
+     0x10 Parking heating
+     0x20 Supplemental heating
+     0x40 Ventilation
+     0x80 Boost mode
+    byte1
+     0x02 External circulation pump control
+     0x04 Combustion air fan (CAV)
+     0x08 Glow Plug (flame detector)
+     0x10 Fuel pump (FP)
+     0x20 Circulation pump (CP)
+     0x40 Vehicle fan relay (VFR)
+     0x80 Yellow LED
+    byte2
+     0x01 Green LED present
+     0x02 Spark transmitter. Implies no Glow plug and thus no resistive flame detector.
+     0x04 Solenoid valve present (coolant circuit switching)
+     0x08 Auxiliary drive indicator (whatever that means)
+     0x10 Generator signal D+ present
+     0x20 Combustion air fan level is in RPM instead of percent
+     0x40 (ZH)
+     0x80 (ZH)
+    byte3
+     0x02 CO2 calibration
+     0x08 Operation indicator (OI)
+    byte4
+     0x0f (ZH)
+     0x10 Heating energy is in watts (or if not set in percent and the value field must be divided
+          by 2 to get the percent value)
+     0x20 (ZH)
+     0x40 Flame indicator (FI)
+     0x80 Nozzle Stock heating
+    byte5
+     0x80 Fuel prewarming resistance and power can be read.
+     0x40 Temperature thresholds available, command 0x50 index 0x11 (whatever that means)
+     0x20 Ignition (T15) flag present
+    byte6
+     0x02 Set value flame detector resistance (FW-SET), set value combustion air fan revolutions
+          (BG-SET), set value output temperature (AT-SET)
+
+  Index 0x0d: No idea.
+
+Command 0x53:
+  Read other kind of data. Seemingly rather static data. Diagnosis does not do this so often.
+TXf4 03 53 02 a6 
+RX4f 11 d3 02 2c 24 25 1c 30 d4 fa 40 74 00 00 63 9c 05 6e
+  bytes:
+  0: dont know
+  1,2: Minimum Voltage threshold
+  3,4,5,6: dont know
+  7: Minimum voltage detection delay (delay)
+  8,9: Maximum voltage threshold
+  10,11,12,13: dont know
+  14: Max voltage detection delay (seconds)
+  
+Command 0x56
+  Error code stuff
+  First byte serves as an index as follows:
+
+  Index 01: read error code list. No Data. Answer ist the error code list
+  using the following format:
+  byte: Amount of error codes. That amount of times, there are the following
+    bytes:
+    byte: Error code numerical value.
+    byte: Error code count-1 (how many time the failure condition was
+      triggered until now).
+  ...
+
+  Example:
+TX f4 03 56 01 a0 
+RX 4f 0a d6 01 03 98 00 88 00 90 00 11
+
+    Error codes:
+    0x01 Defective control unit
+    0x02 No start
+    0x03 Flame failure
+    0x04 Supply voltage too high
+    0x05 Flame was detected prior to combustion
+    0x06 Heating unit overheated  
+    0x07 Heating unit interlocked
+    0x08 Metering pumpu short circuit
+    0x09 Combustion air fan short circuit
+    0x0a Glow plug/flame monitor short circuit
+    0x0b Circulation pump short circuit
+    0x0c No comunication to air condition
+    0x0d Green LED short circuit
+    0x0e Yellow LED short circuit
+    0x0f No configuraton signal
+    0x10 Solenoid valve short circuit
+    0x11 ECU wrong coded
+    0x12 W-Bus comunication failure
+    0x13 Vehicle fan relay short circuit
+    0x14 Temperature sensor short circuit
+    0x15 Combustion air fan blocked
+    0x16 Battery main switch short circuit
+    0x17 Invalid air flow reduction
+    0x18 Comunication failure on customer specific bus
+    0x19 Glow plug/electronic ignition short circuit
+    0x1a Flame sensor short circuit
+    0x1b Overheat short circuit
+    0x1c Fault 28
+    0x1d Solenoid valve shed test short circuit
+    0x1e Fuel sensor short circuit
+    0x1f Nozzle stock heating short circuit
+    0x20 Operation indicator short circuit
+    0x21 Flame indicator short circuit
+    0x22 Reference resistance wrong
+    0x23 Crash interlock activated
+    0x24 Car is almost out of fuel
+    0x25 Fuel pre heating short circuit
+    0x26 PCB temperatur sensor short circuit
+    0x27 Ground contact to the ECU broken
+    0x28 Board net energy manager low power voltage
+    0x29 Fuel priming still not done
+    0x2a Error in the radio telegram
+    0x2b Telestart still not programmed
+    0x2c The pressure sensor has short circuit
+    0x2d Fault 45
+    ...
+    0x31 Fault 49
+    0x32 No start from control idle period
+    0x33 Flame monitor signal invalid
+    0x34 Default values entered
+    0x35 EOL programming has not been carried out
+    0x36 Thermal fuse short circuit
+    0x37 Fault 55
+    ...
+    0x4f Fault 79
+    0x50 User interface idle-Mode (no-communication)
+    0x51 User interface has communication fault
+    0x52 User interface send no defined operating mode
+    0x53 Heater fan status message negative
+    0x54 Heater fan status bus has short circuit to UB
+    0x55 Temperature water sensor failure
+    0x56 Temperature water sensor short circuit to UB
+    0x57 Overheating water temperature sensor
+    0x58 Overstepping water temperature sensor gradient
+    0x59 Overheating blow temperature sensor
+    0x5a Overstepping low temperature sensor gradient
+    0x5b Overheating printed circuit board temperature sensor
+    0x5c Overstepping printed circuit board temp sensor gradient
+    0x5d Cabin temperature sensor failure
+    0x5e Flame detector gradient failure
+    0x5f Emergency cooling
+    0x60 Customer specific fault 1
+    ...
+    0x7f Customer specific fault 32
+    0x80 Fault 128
+    0x81 EOL checksum error
+    0x82 No start during test-run
+    0x83 Flame failure
+    0x84 Operating voltage too low
+    0x85 Flame was detected after combustion
+    0x86 Fault 134
+    0x87 Heater lock-out permanent
+    0x88 Fuel pump failure
+    0x89 Combustion air fan interruption
+    0x8a Glow plug / flame monitor interruption
+    0x8b Circulation pump interruption
+    0x8c Fault 140
+    0x8d Green LED interruption
+    0x8e Yellow LED interruption
+    0x8f Fault 143
+    0x90 Solenoid valve interruption
+    0x91 Control unit locked or coded as neutral
+    0x92 Command refresh failure
+    0x93 Fault 147
+    0x94 Temperature sensor interruption
+    0x95 Combustion air fan tight
+    0x96 Fault 150
+    0x97 Overheat sensor position wrong
+    0x98 Fault 152 (Power supply interruption)
+    0x99 Glow plug / electronic ignition unit interruption
+    0x9a Flame sensor interruption
+    0x9b Setpoint transmitter invalid
+    0x9c Intelligent undervoltage detection
+    0x9d Solenoid valve shed test interruption
+    0x9e Fuel sensor interruption
+    0x9f Nozzle stock heating interruption
+    0xa0 Operating indicator interruption
+    0xa1 Flame indicator interruption
+    0xa2 Fault 162
+    ...
+    0xa4 Fault 164
+    0xa5 Fuel pre heating interruption
+    0xa6 PCB temperature sensor interruption
+    0xa7 Fault 167
+    0xa8 Communication board net energy manager error
+    0xa9 Fault 169
+    0xaa Send on W-Bus not succeed
+    0xab Overheat sensor interruption
+    0xac The pressure sensor failure
+    0xad Fault 173
+    ...
+    0xb5 Fault 181
+    0xb6 Thermal fuse interrupted
+    0xb7 Fault 183
+    ...
+    0xd0 Fault 208
+    0xe0 Customer specific fault 33
+    ...
+    0xfe Customer specific fault 63
+    0xff Unknown error code
+
+  Index 02: Read complete error code block. 1 data byte corresponding to
+  the error code numerical value.
+    Format: 
+      5 bytes: comprises status, counter, temperature, etc.
+        1 byte status flags
+          0x01 stored
+          0x02 actual
+        1 byte counter
+        2 bytes operating state as command 0x50 index 7 byte 0,1
+        1 byte Temperatur in Celcius offset 50 degree (value 70 -> 20 degrees)
+      2 bytes: Power supply voltage during the incident in mili volt.
+      2 bytes: Operating duration hours at the incident
+      1 byte: Operating duration minutes at the incident
+
+Example transaction
+TX f4 04 56 02 98 3c 
+RX 4f 0e d6 02 98 03 06 04 00 46 35 66 03 97 37 ba 
+
+Error code count: 1
+Error code 98, counter: 1
+        State: 3
+        Counter: 6
+        Unkown values 4 0
+        Temperatur 20 C
+        Power supply tension: 0.870000
+        Operating time: 14231:234
+
+
+State: Not actual, not stored
+Counter 1
+Temperature 20 degrees Celcius
+Operating State Off
+
+Some more examples
+TX f4 04 56 02 98 3c 
+RX 4f 0e d6 02 98 00 01 04 00 46 35 66 03 97 1b 92
+TX f4 04 56 02 88 2c
+RX 4f 0e d6 02 88 00 01 04 00 46 35 7a 03 97 1d 98
+TX f4 04 56 02 90 34
+RX 4f 0e d6 02 90 00 01 04 00 46 35 66 03 97 1d 9c
+
+  Index 03: Erase error codes. No data.
+
+
+Command 0x57: CO2 calibration
+example:
+TX f4 03 57 01 a1 
+RX 4f 06 d7 01   97 64 ff   93
+
+     index 1 read CO2 calibration value (one byte each: current, minimum, maximum)
+     index 3 write CO2 calibration value (one byte)
+
+
+IDs of some devices
+
+Label sticker: 1K0 815 005FR (does not match value read out below)
+W-Bus version: 3.3
+Device Name: PQ46 SH 
+W-Bus code: 717cc4e73f8000
+Device ID Number: 090115594a
+Data set ID Number: 090133974100
+Software ID Number: 0000000030
+Hardware version: 37/4
+Software version: Friday 13/5  5.61
+Software version EEPROM: Friday 13/5  5.61
+Date of Manufacture Control Unit: 26.10.5
+Date of Manufacture Heater: 7.11.5
+Customer ID Number: 1K0815007AP3602
+Serial Number: 0000025118
+Sensor8: 41f0e004080400
+U1: 0b0000000003dd
+System Level: 00
+
+W-Bus version: 3.3
+Device Name: PQ35 ZH 
+W-Bus code: 213cc0e73f0000
+Device ID Number: 0900620743
+Data set ID Number: 090074764500
+Software ID Number: 0000000030
+Hardware version: 38/2
+Software version: Monday 16/3  4.7
+Software version EEPROM: Monday 16/3  4.7
+Date of Manufacture Control Unit: 14.9.3
+Date of Manufacture Heater: 1.10.3
+Customer ID Number: 1K0815071E 0707
+Serial Number: 0000349144
+Sensor8: 420975b7000000
+U1: 0b0000000003bf
+System Level: 75
+
+Some Software version (from elektroda.pl)
+1K0 815 007CD, SW: 4709
+1K0 815 005JT, SW: 4707
+1K0 815 005JT, SW: 4707
+1K0 815 005JJ, SW: 4404
+1K0 815 005JJ, SW: 4404
+1K0 815 005JD, SW: 4404
+1K0 815 007BH, SW: 4404
+3C0 815 005AB, SW: 4401
+1K0 815 007BT, SW: 3907
+1K0 815 007BG, SW: 3803
+1K0 815 005DR, SW: 1706
+1K0 815 005GT, SW
+1K0 815 005FR, SW: 1305
+1K0 815 007AM, SW: 4804
+1K0 815 071E,  SW: 1603
