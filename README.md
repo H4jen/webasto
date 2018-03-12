@@ -6,7 +6,7 @@ The goal of this project is the following:
 1) Implement HW interface that can talk to the webasto implemented W-bus (K-line) using arduino HW and simple HW TTL/K-line interface.
 2) Implement SW that can sniff the webasto traffic
 3) Implement SW that can talk to the webasto
-4) Map protocol used to communicate with my webasto air top evo 40. May be scalable to other versions??
+4) Map protocol used to communicate with my webasto air top evo 40. May be scalable to other versions?? Already present in libwbus project. See below
 5) Build diagnostic box with status LCD display that monitors the Webasto heater.
 
 The arduino UNO was selected together with a raspberry pi (for remote development) was selected in this project.
