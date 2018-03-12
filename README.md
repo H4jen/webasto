@@ -43,5 +43,30 @@ Picture below shows the setup.
 
 ![sniffer_setupWbus](Sniffer_setup.JPG)
 
+Below is the first packets sniffed from arduino side:
+
+  F43ACA6F5 
+  F41F5060A365020A030615C1C7B42CD062871F244E4AA68C599133CD9E52575FF04AFF 
+  
+Interpreted using libwbus documentation:
+
+Line 1: Header = 0xF4, Length = 0x03 bytes, Command = 0xAC, Data = A6, Checksum = 0xF5
+
+testing checksum (https://www.scadacore.com/tools/programming-calculators/online-checksum-calculator/)
+
+The problem with the above was that the checksum did not fit XOR as from the documentation for LIBWBUS. After some reading it was discovered that the communication is on the physical layer serial-8E1 and the SoftwareSerial library does not support parity check. After replacing the SoftwareSerial with CustomSoftwareSerial that supports parity the following was sniffed:
+
+F4 3 56 1 A0  
+F4 1F 50 30 1 3 5 6 7 8 A C E F 10 11 13 1E 1F 24 27 29 2A 2C 2D 32 34 3D 52 57 5F 78 89  
+
+Using XOR parity the last byt checks out. According to the libwbus documentation the two commands above 56 and 50 are 
+
+
+
+
+
+
+
+
 
 
