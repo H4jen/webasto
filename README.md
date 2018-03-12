@@ -16,6 +16,9 @@ W-bus protocol
 
 The W-bus protocol is a bi-directional link using single physical line for communication. On the physical layer it uses 0 -> 12V signaling. The w-bus is a K-line interface. The K-line interface is described in ISO 9141. Normally the K-line is interfaced using integrated chips. But is this project a simple transistor cascade was selected. The K-line is held in high state (Vbat).
 
+This project uses parts of the libwbus project found here: https://sourceforge.net/projects/libwbus/
+
+
 HW interface
 ------------
 THe HW interface is simulated using LTspice from linear tech, which is an excellent freeware implmentation of SPICE. The HW interface is a TTL to W-bus (K-line) converter using standard resistors and NPN transistors.
@@ -26,3 +29,8 @@ There are some open questions on the input resistance of the W-bus interface of 
 The above circuit was simulated. The resulting curves with TX TTL baudrate 9600 shown at the W-bus output (12V) and the resulting curve at the RX TTL interface (+5v).
 
 ![RX_TTL_input_W-BUS_output.JPG](RX_TTL_input_W-BUS_output.JPG)
+
+Webasto <-> PC arduino sniffer
+----------------------
+Using arduino and together with a the RX parts of the above HW interface a sniffer was built and connected just to listen to the traffic between the Webasto air top evo 40 and the WTT software. Picture below shows the setup.
+
