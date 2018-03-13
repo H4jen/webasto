@@ -75,7 +75,7 @@ After this fix the following was sniffed
 
 TX-cmd:F4 03 56 01 A0  RX-response:4F 10 D6 01 04 02 01 07 07 01 00 A3 01 00 97 01 01 BB
 
-This concludes that the sniffer part now works.
+This concludes that the sniffer part now works. The webasto sniffer is copied to the webasto_sniffer repo. Just to keep this strand alone
 
 
 
