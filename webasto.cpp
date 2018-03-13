@@ -1,11 +1,8 @@
 #include <Arduino.h>
-//#include <HardwareSerial.h>
 #include <CustomSoftwareSerial.h>
 #include <Wire.h>
 #include <LCD.h>
 #include <LiquidCrystal_I2C.h>
-//#include <avr/io.h>
-//#include <util/delay.h>
 
 #define I2C_ADDR    0x27  // Define I2C Address where the PCF8574A is
 #define BACKLIGHT_PIN     3
@@ -16,7 +13,11 @@
 #define D5_pin  5
 #define D6_pin  6
 #define D7_pin  7
- 
+
+#define MESSAGE_BUFFER_SIZE 64
+//Change this is other header is needed. My air top evo 40 uses F4 from WTT side and 4F from multicontrol / heater side.
+#define TXHEADER 0xf4
+#define RXHEADER 0x4f
 #define INVERT_SIGNAL false
 
 #define BLINK_DELAY_MS 2400
@@ -28,7 +29,7 @@
   #define DPRINT(...)    Serial.print(__VA_ARGS__)     //DPRINT is a macro, debug print
   #define DPRINTHEX(...) Serial.print(__VA_ARGS__,HEX)
   #define DPRINTLN(...)  Serial.println(__VA_ARGS__)   //DPRINTLN is a macro, debug print with new line
-  #define DPRINTLNHEX(...) Serial.println(__VA_ARGS__,HEX);
+  #define DPRINTLNHEX(...) Serial.println(__VA_ARGS__,HEX)
 #else
   #define DPRINT(...)     //now defines a blank line
   #define DPRINTLN(...)   //now defines a blank line
@@ -36,11 +37,14 @@
   #define DPRINTLNHEX(...)
 #endif
 
-//byte message[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-//byte message2[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-
-//#define setbit(port, bit) (port) |= (1 << (bit))
-//#define clearbit(port, bit) (port) &= ~(1 << (bit))
+struct rx_message
+{
+  int header=0;
+  int length=0;
+  int data[MESSAGE_BUFFER_SIZE];
+  int nr_data_read=0;
+  int checksum=0; 
+} rx_msg;
  
 //can only be pins 8-13 because prtmapping is hardcoded to PORTB 
 uint8_t rxPin=10;
@@ -48,20 +52,14 @@ uint8_t txPin=11;
 
 // set up a new serial port
 CustomSoftwareSerial* mySerial;
-//=  SoftwareSerial(rxPin,txPin,INVERT_SIGNAL);
 
 LiquidCrystal_I2C	lcd(I2C_ADDR,En_pin,Rw_pin,Rs_pin,D4_pin,D5_pin,D6_pin,D7_pin);
 
 void init_board() {
  
- //call arduino init()
  init();
  mySerial = new CustomSoftwareSerial(rxPin, txPin); // rx, tx
- mySerial->begin(2400, CSERIAL_8E1);         // Baud rate: 9600, configuration: CSERIAL_8N1
- //mySerial->write("Test message");            // Write testing data
-
-//mySerial.begin(BAUD_RATE);
-
+ mySerial->begin(BAUD_RATE, CSERIAL_8E1);         // Baud rate: 9600, configuration: CSERIAL_8N1
 
 #ifdef DEBUG
  Serial.begin(9600);
@@ -76,9 +74,79 @@ void init_board() {
   lcd.setBacklight(HIGH);
   lcd.home ();                   // go home
 
-  lcd.print("Webasto debug inter.");  
+  lcd.print("Webasto");  
   lcd.setCursor ( 0, 1 );        // go to the 2nd line
-  lcd.print("Just to test stuff!");
+  lcd.print("test stuff!");
+}
+
+
+enum rx_reception_states {START, FINDHEADER, READLENGTH, READDATA, RESET_STATE, CHECKSUM_OK};
+//Keeps track of which state the RX is in.,
+enum rx_reception_states rx_state = START;
+
+//Webasto communication. It is assumed that it is always the master (WTT) that initiates and requests information from the slave (heater)
+//The read serial data function reads the serial data until a valid header is found. When the header is found it continues to read the message. 
+//When a valid message has been read, the function waits to read a valid RX response. The TX com is always echoed back via K-line so this will work.
+void readSerialData(void)
+{
+ //The reception of a message is implemented as a state machine 
+ //Read is blocking. Wait until a message is read before doing anything else...
+ //Need timeout?
+ while (mySerial->available()){
+ 	//int txMsgLength=0;
+	int rxByte = 0;
+ 	switch(rx_state) {
+	//Nothing is received yet, but data in buffer
+	case START:
+		rx_state = FINDHEADER;
+		break;	
+	case FINDHEADER:
+		rxByte = mySerial->read();
+		if(rxByte == 0xf4) {
+			//DPRINTLN(rxByte);
+			rx_state = READLENGTH;
+			rx_msg.header = rxByte;
+		}
+		break;
+	//Header received
+	case READLENGTH:
+		rxByte = mySerial->read();
+		if((rxByte < 64) && (rxByte > 1)) {
+			rx_state =READDATA;
+			rx_msg.length=rxByte;
+		}
+		else rx_state = RESET_STATE;
+		break;
+	case READDATA:
+        	rxByte = mySerial->read();
+                rx_msg.data[rx_msg.nr_data_read] = rxByte;
+		rx_msg.nr_data_read++;
+		if(rx_msg.nr_data_read >= rx_msg.length){
+			 DPRINT("Header byte: ");
+			 DPRINTLNHEX(rx_msg.header);
+			 DPRINT("Length byte: ");
+                         DPRINTLNHEX(rx_msg.length);
+	    		 DPRINT("Data bytes: ");
+			 for(int i=0;i<(rx_msg.length-1);i++) DPRINTHEX(rx_msg.data[i]);
+			 DPRINTLN(' ');
+                         DPRINT("Checksum byte: ");
+			 DPRINTLNHEX(rxByte);
+			 rx_state=RESET_STATE;
+			 rx_msg.length=rxByte;
+                }
+                break;
+	case RESET_STATE:
+		rx_msg.header=0;
+  		rx_msg.length=0;
+  		rx_msg.nr_data_read=0;
+		rx_msg.checksum=0;
+		rx_state=START;
+		DPRINTLN(' '); 
+		break;
+ 	default:
+		break;		
+	}
+ }
 }
 
 
@@ -86,18 +154,33 @@ int main (void)
 {
 //Init arduino
 init_board();
-//int FFcounter = 0;
+
 // main loop
 while(1) {
-  int c = mySerial->read();
-  if(c != -1) { 
-	if(c == 0xF4){
-	  DPRINTLN(' ');
-	  DPRINTHEX(c);
-	}
-	else { DPRINTHEX(c);}
-	DPRINT(' ');
+  // Char from serial line interface
+  //int c = mySerial->read();
+  readSerialData();
+  //if(rx_msg.size != 0){
+//	for(int i=0; i<rx_msg.size;i++){
+  //		DPRINTHEX(rx_msg.string[i]);
+ // 	}
+  //	DPRINTLN(' ');
+  //}
+  //If data is availible 
+  //if(c != -1) { 
+//	if(c == 0xF4){
+//	  DPRINTLN(' ');
+//	  DPRINTHEX(c);
+//	}
+//	else if(c <= 15){
+//	  DPRINT('0');
+  //        DPRINTHEX(c);
+//	}
+//	else { DPRINTHEX(c);
+//	}
 	
-  }
+//	DPRINT(' ');
+	
+
  }
 }
