@@ -15,7 +15,11 @@ Dependencies
 -------------
 *) Arduino framework
 
-*) CustomSoftwareSerial (serial replacement)
+*) Arduino Makefile (Do not need IDE) https://github.com/sudar/Arduino-Makefile
+
+*) CustomSoftwareSerial (serial replacement) (https://github.com/ledongthuc/CustomSoftwareSerial)
+
+*) newLiquidCrystal (https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/Home)
 
 W-bus protocol
 -------------
