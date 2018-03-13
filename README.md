@@ -1,4 +1,4 @@
-# webasto
+# Interfacing a webasto heater using K-line interface
 Mostly because my webasto air top evo 40 broke down and I was told to send the unit back to repair shop for SW reset in order to get it working again. I decided to put some effort into understanding and hopefully be able to controll the heater without sending things back to repair shop in the future.
 
 The goal of this project is the following:
