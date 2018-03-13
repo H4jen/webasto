@@ -59,7 +59,7 @@ The problem with the above was that the checksum did not fit XOR as from the doc
 F4 3 56 1 A0  
 F4 1F 50 30 1 3 5 6 7 8 A C E F 10 11 13 1E 1F 24 27 29 2A 2C 2D 32 34 3D 52 57 5F 78 89  
 
-Using XOR parity the last byt checks out. According to the libwbus documentation the two commands above are 56 and 50. It was noted in this phase that the RX response was missing. This was fixed using a modified HW interface. Picture above is not updated yet. Needed PNP switch instead of NPN switch on RX input.
+Using XOR parity the last byt checks out. According to the libwbus documentation the two commands above are 56 and 50. It was noted in this phase that the RX response was missing. This was fixed using a modified HW interface. HW schematic above is updated. Needed PNP switch instead of NPN switch on RX input.
 
 After this fix the following was sniffed
 
