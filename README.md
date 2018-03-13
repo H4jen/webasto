@@ -11,6 +11,11 @@ The goal of this project is the following:
 
 The arduino UNO was selected together with a raspberry pi (for remote development) was selected in this project.
 
+Dependencies
+-------------
+*) Arduino framework
+*) CustomSoftwareSerial (serial replacement)
+
 W-bus protocol
 -------------
 
