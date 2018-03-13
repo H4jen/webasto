@@ -14,6 +14,7 @@ The arduino UNO was selected together with a raspberry pi (for remote developmen
 Dependencies
 -------------
 *) Arduino framework
+
 *) CustomSoftwareSerial (serial replacement)
 
 W-bus protocol
