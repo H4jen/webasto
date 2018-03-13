@@ -14,7 +14,7 @@
 #define D6_pin  6
 #define D7_pin  7
 
-#define MESSAGE_BUFFER_SIZE 64
+#define MESSAGE_BUFFER_SIZE 128
 //Change this is other header is needed. My air top evo 40 uses F4 from WTT side and 4F from multicontrol / heater side.
 #define TXHEADER 0xf4
 #define RXHEADER 0x4f
@@ -23,13 +23,13 @@
 #define BLINK_DELAY_MS 2400
 //Baud rate of software serial (interface to Heater)
 #define BAUD_RATE 2400
-#define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
 
+#define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
 #ifdef DEBUG    //Macros are usually in all capital letters.
   #define DPRINT(...)    Serial.print(__VA_ARGS__)     //DPRINT is a macro, debug print
-  #define DPRINTHEX(...) Serial.print(__VA_ARGS__,HEX)
+  #define DPRINTHEX(...) debugprinthex(__VA_ARGS__,0)
   #define DPRINTLN(...)  Serial.println(__VA_ARGS__)   //DPRINTLN is a macro, debug print with new line
-  #define DPRINTLNHEX(...) Serial.println(__VA_ARGS__,HEX)
+  #define DPRINTLNHEX(...) debugprinthex(__VA_ARGS__,1)
 #else
   #define DPRINT(...)     //now defines a blank line
   #define DPRINTLN(...)   //now defines a blank line
@@ -45,7 +45,20 @@ struct rx_message
   int nr_data_read=0;
   int checksum=0; 
 } rx_msg;
- 
+
+void debugprinthex(int c,int newline) 
+{
+  DPRINT(' ');
+  if(c <= 15){
+  	DPRINT('0');
+        Serial.print(c,HEX);
+  }
+  else Serial.print(c,HEX);
+  if(newline == 1) Serial.println();
+
+
+}
+
 //can only be pins 8-13 because prtmapping is hardcoded to PORTB 
 uint8_t rxPin=10;
 uint8_t txPin=11;
@@ -80,7 +93,7 @@ void init_board() {
 }
 
 
-enum rx_reception_states {START, FINDHEADER, READLENGTH, READDATA, RESET_STATE, CHECKSUM_OK};
+enum rx_reception_states {START, FINDHEADER, READLENGTH, READDATA, RESET_STATE, CHECKSUM_CHECK, PARSE_MESSAGE};
 //Keeps track of which state the RX is in.,
 enum rx_reception_states rx_state = START;
 
@@ -102,16 +115,16 @@ void readSerialData(void)
 		break;	
 	case FINDHEADER:
 		rxByte = mySerial->read();
-		if(rxByte == 0xf4) {
-			//DPRINTLN(rxByte);
-			rx_state = READLENGTH;
+		//Below if statement could be flawed!!
+		if((rxByte == TXHEADER) || (rxByte == RXHEADER)) {
+		        rx_state = READLENGTH;
 			rx_msg.header = rxByte;
 		}
 		break;
 	//Header received
 	case READLENGTH:
 		rxByte = mySerial->read();
-		if((rxByte < 64) && (rxByte > 1)) {
+		if((rxByte < 128) && (rxByte > 1)) {
 			rx_state =READDATA;
 			rx_msg.length=rxByte;
 		}
@@ -127,14 +140,28 @@ void readSerialData(void)
 			 DPRINT("Length byte: ");
                          DPRINTLNHEX(rx_msg.length);
 	    		 DPRINT("Data bytes: ");
-			 for(int i=0;i<(rx_msg.length-1);i++) DPRINTHEX(rx_msg.data[i]);
+			 int XOR = 0;
+			 XOR = XOR^rx_msg.header^rx_msg.length;
+			 for(unsigned int i=0;i<(rx_msg.length-1);i++) {
+				XOR = XOR ^ rx_msg.data[i];
+				DPRINTHEX(rx_msg.data[i]);
+			 }
 			 DPRINTLN(' ');
-                         DPRINT("Checksum byte: ");
+			 DPRINT("Checksum byte: ");
+			 rx_msg.checksum = rxByte;
 			 DPRINTLNHEX(rxByte);
-			 rx_state=RESET_STATE;
-			 rx_msg.length=rxByte;
-                }
+			 
+			 if(XOR == rx_msg.checksum) rx_state = PARSE_MESSAGE;
+			 else {
+			 	rx_state = RESET_STATE;
+				DPRINTLN("Checksum check FAILED!!");
+			 }
+		}
                 break;
+	case PARSE_MESSAGE:
+		//Do message parsing
+		rx_state = RESET_STATE;
+		break;
 	case RESET_STATE:
 		rx_msg.header=0;
   		rx_msg.length=0;
@@ -144,7 +171,7 @@ void readSerialData(void)
 		DPRINTLN(' '); 
 		break;
  	default:
-		break;		
+		break;
 	}
  }
 }
