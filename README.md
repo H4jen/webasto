@@ -18,9 +18,9 @@ The W-bus protocol is a bi-directional link using single physical line for commu
 
 This project uses parts of the libwbus project found here: https://sourceforge.net/projects/libwbus/
 
-On physicla layer the line uses 2400 baud 8E1 format. The protocol is packet based with the following structure
+On the physical layer the line uses 2400 baud 8E1 format (NOTE: Arduino SoftwareSerial does not support parity check!!, use CustomSoftwareSerial or HW able to support parity). The protocol is packet based with the following structure
 
-Header-length-command-data-checksum.
+ Header-length-command-data-checksum.
 
 More information on the protocol can be found in the repo in text file: webasto_wbus.txt (stolen from libwbus repo)
 
@@ -65,7 +65,7 @@ After this fix the following was sniffed
 
 TX-cmd:F4 03 56 01 A0  RX-response:4F 10 D6 01 04 02 01 07 07 01 00 A3 01 00 97 01 01 BB
 
-This concludes the the sniffer part now works.
+This concludes that the sniffer part now works.
 
 
 
