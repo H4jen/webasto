@@ -4,6 +4,7 @@
 #include <LCD.h>
 #include <LiquidCrystal_I2C.h>
 
+
 #define I2C_ADDR    0x27  // Define I2C Address where the PCF8574A is
 #define BACKLIGHT_PIN     3
 #define En_pin  2
@@ -13,6 +14,7 @@
 #define D5_pin  5
 #define D6_pin  6
 #define D7_pin  7
+
 
 #define MESSAGE_BUFFER_SIZE 128
 //Change this is other header is needed. My air top evo 40 uses F4 from WTT side and 4F from multicontrol / heater side.
@@ -37,6 +39,8 @@
   #define DPRINTLNHEX(...)
 #endif
 
+
+//A test message
 struct rx_message
 {
   int header=0;
