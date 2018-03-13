@@ -1,4 +1,4 @@
-# webasto
+# Interfacing a webasto heater using K-line interface
 Mostly because my webasto air top evo 40 broke down and I was told to send the unit back to repair shop for SW reset in order to get it working again. I decided to put some effort into understanding and hopefully be able to controll the heater without sending things back to repair shop in the future.
 
 The goal of this project is the following:
@@ -11,16 +11,26 @@ The goal of this project is the following:
 
 The arduino UNO was selected together with a raspberry pi (for remote development) was selected in this project.
 
+Dependencies
+-------------
+*) Arduino framework
+
+*) Arduino Makefile (Do not need IDE) https://github.com/sudar/Arduino-Makefile
+
+*) CustomSoftwareSerial (serial replacement) (https://github.com/ledongthuc/CustomSoftwareSerial)
+
+*) newLiquidCrystal (https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/Home)
+
+*) LibWbus (uses documentation only + code review)  https://sourceforge.net/projects/libwbus/
+
 W-bus protocol
 -------------
 
-The W-bus protocol is a bi-directional link using single physical line for communication. On the physical layer it uses 0 -> 12V signaling. The w-bus is a K-line interface. The K-line interface is described in ISO 9141. Normally the K-line is interfaced using integrated chips. But is this project a simple transistor cascade was selected.
+The W-bus protocol is a bi-directional link using single physical line for communication. On the physical layer it uses 0 -> 12V signaling. The w-bus is a K-line interface. The K-line interface is described in ISO 9141. Normally the K-line is interfaced using integrated chips. In this project the TTL to K-line is solved using simple NPN PNP transistors.
 
-This project uses parts of the libwbus project found here: https://sourceforge.net/projects/libwbus/
+On the physical layer the communication is a serial line with 2400 baud 8E1 format (NOTE: Arduino SoftwareSerial does not support parity check!!, use CustomSoftwareSerial or something similar that support parity). The protocol is packet based with the following structure
 
-On physicla layer the line uses 2400 baud 8E1 format. The protocol is packet based with the following structure
-
-Header-length-command-data-checksum.
+ Header-length-command-data-checksum.
 
 More information on the protocol can be found in the repo in text file: webasto_wbus.txt (stolen from libwbus repo)
 
@@ -31,7 +41,7 @@ THe HW interface is simulated using LTspice from linear tech, which is an excell
 
 ![HW_interface_Wbus](HW_interface_Wbus.JPG)
 
-There are some open questions on the input resistance of the W-bus interface of the webasto and the current drive capabilities. The TX output resistor and RX input resistor should be scale accordingly to this.
+Dependent on the ODB circuit used and the webasto K-line interface the input/output resistances may need to be scaled.
 The above circuit was simulated. The resulting curves with TX TTL baudrate 9600 shown at the W-bus output (12V) and the resulting curve at the RX TTL interface (+5v).
 
 ![RX_TTL_input_W-BUS_output.JPG](RX_TTL_input_W-BUS_output.JPG)
@@ -59,13 +69,13 @@ The problem with the above was that the checksum did not fit XOR as from the doc
 F4 3 56 1 A0  
 F4 1F 50 30 1 3 5 6 7 8 A C E F 10 11 13 1E 1F 24 27 29 2A 2C 2D 32 34 3D 52 57 5F 78 89  
 
-Using XOR parity the last byt checks out. According to the libwbus documentation the two commands above are 56 and 50. It was noted in this phase that the RX response was missing. This was fixed using a modified HW interface. Picture above is not updated yet. Needed PNP switch instead of NPN switch on RX input.
+Using XOR parity the last byt checks out. According to the libwbus documentation the two commands above are 56 and 50. It was noted in this phase that the RX response was missing. This was fixed using a modified HW interface. HW schematic above is updated. Needed PNP switch instead of NPN switch on RX input.
 
 After this fix the following was sniffed
 
 TX-cmd:F4 03 56 01 A0  RX-response:4F 10 D6 01 04 02 01 07 07 01 00 A3 01 00 97 01 01 BB
 
-This concludes the the sniffer part now works.
+This concludes that the sniffer part now works.
 
 
 
