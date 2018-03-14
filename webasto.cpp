@@ -3,7 +3,8 @@
 #include <Wire.h>
 #include <LCD.h>
 #include <LiquidCrystal_I2C.h>
-
+#include "message.h"
+#include "webasto.h"
 
 #define I2C_ADDR    0x27  // Define I2C Address where the PCF8574A is
 #define BACKLIGHT_PIN     3
@@ -16,7 +17,7 @@
 #define D7_pin  7
 
 
-#define MESSAGE_BUFFER_SIZE 128
+//#define MESSAGE_BUFFER_SIZE 128
 //Change this is other header is needed. My air top evo 40 uses F4 from WTT side and 4F from multicontrol / heater side.
 #define TXHEADER 0xf4
 #define RXHEADER 0x4f
@@ -41,14 +42,15 @@
 
 
 //A test message
-struct rx_message
-{
-  int header=0;
-  int length=0;
-  int data[MESSAGE_BUFFER_SIZE];
-  int nr_data_read=0;
-  int checksum=0; 
-} rx_msg;
+//struct rx_message
+//{
+//  int header=0;
+//  int length=0;
+//  int data[MESSAGE_BUFFER_SIZE];
+//  int nr_data_read=0;
+//  int checksum=0; 
+//  bool valid_message = false;
+//} rx_msg;
 
 void debugprinthex(int c,int newline) 
 {
@@ -155,7 +157,12 @@ void readSerialData(void)
 			 rx_msg.checksum = rxByte;
 			 DPRINTLNHEX(rxByte);
 			 
-			 if(XOR == rx_msg.checksum) rx_state = PARSE_MESSAGE;
+			 if(XOR == rx_msg.checksum) {
+			 	rx_state = PARSE_MESSAGE;
+				rx_msg.valid_message = true;
+				//calls message parser with global struct
+				parse_message();
+			 }
 			 else {
 			 	rx_state = RESET_STATE;
 				DPRINTLN("Checksum check FAILED!!");
@@ -171,6 +178,7 @@ void readSerialData(void)
   		rx_msg.length=0;
   		rx_msg.nr_data_read=0;
 		rx_msg.checksum=0;
+		rx_msg.valid_message=false;
 		rx_state=START;
 		DPRINTLN(' '); 
 		break;
@@ -188,8 +196,12 @@ init_board();
 
 // main loop
 while(1) {
-  // Char from serial line interface
-  //int c = mySerial->read();
+  
+  //Detect if webasto communication is up and running. If not try to start (inf?)
+  //Display status in LCD display.
+
+
+  //Read data from the serial interface if it is availible and parse message.  
   readSerialData();
   //if(rx_msg.size != 0){
 //	for(int i=0; i<rx_msg.size;i++){
