@@ -1,0 +1,206 @@
+HeHello world
+Header byte:  F4
+Length byte:  03
+Data bytes:  51 0A 
+Checksum byte:  AC
+ 
+Header byte:  4F
+Length byte:  04
+Data bytes:  D1 0A 41 
+Checksum byte:  D1
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  45 31 
+Checksum byte:  83
+ 
+Header byte:  4F
+Length byte:  0D
+Data bytes:  C5 31 01 02 02 05 03 07 05 0A 0A 0A 
+Checksum byte:  B9
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  51 31 
+Checksum byte:  97
+ 
+Header byte:  4F
+Length byte:  16
+Data bytes:  D1 31 01 02 03 04 06 07 08 09 0B 0C 0D 0E 0F 10 12 15 18 19 1A 
+Checksum byte:  BA
+ 
+Header byte:  F4
+Length byte:  16
+Data bytes:  51 30 01 02 03 04 06 07 08 09 0B 0C 0D 0E 0F 10 12 15 18 19 1A 
+Checksum byte:  80
+ 
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  50 31 
+Checksum byte:  96
+ 
+Header byte:  4F
+Length byte:  41
+Data bytes:  D0 31 01 03 05 06 07 08 0A 0C 0D 0E 0F 10 11 13 14 19 1A 1D 1E 1F 21 24 26 27 29 2A 2B 2C 2D 2F 32 33 34 35 36 37 39 3A 3B 3D 41 42 43 44 50 52 54 57 5F 6C 77 78 79 7A F7 F8 F9 FA FB FC FD FE 
+Checksum byte:  C6
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  51 0C 
+Checksum byte:  AA
+ 
+Header byte:  4F
+Length byte:  0A
+Data bytes:  D1 0C DA 5D F8 DA 39 00 04 
+Checksum byte:  00
+ 
+Header byte:  F4
+Length byte:  02
+Data bytes:  38 
+Checksum byte:  CE
+ 
+Header byte:  4F
+Length byte:  0B
+Data bytes:  B8 0A 00 00 02 BE 02 BF 04 00 
+Checksum byte:  F3
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  53 02 
+Checksum byte:  A6
+ 
+Header byte:  4F
+Length byte:  11
+Data bytes:  D3 02 29 04 23 28 2C EC 14 3E 80 32 C8 3E 80 06 
+Checksum byte:  81
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  57 01 
+Checksum byte:  A1
+ 
+Header byte:  4F
+Length byte:  06
+Data bytes:  D7 01 81 72 8D 
+Checksum byte:  E1
+ 
+Header byte:  F4
+Length byte:  1F
+Data bytes:  50 30 01 03 05 06 07 08 0A 0C 0E 0F 10 11 13 1E 1F 24 27 29 2A 2C 2D 32 34 3D 52 57 5F 78 
+Checksum byte:  89
+ 
+Header byte:  4F
+Length byte:  52
+Data bytes:  D0 30 01 00 03 00 05 00 06 00 07 00 08 00 0A 00 0C 3E 0E 31 38 0F 00 81 10 00 11 00 00 13 00 D6 1E 00 00 1F 00 24 00 27 32 29 8F A0 2A 00 2C 00 2D 00 32 00 34 03 70 3D 00 00 52 00 00 30 00 03 05 00 0D 29 00 02 25 57 00 19 2A 5F 00 22 78 00 8A 
+Checksum byte:  5F
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  56 01 
+Checksum byte:  A0
+ 
+Header byte:  4F
+Length byte:  10
+Data bytes:  D6 01 04 02 01 07 07 01 00 A3 01 00 97 01 01 
+Checksum byte:  BB
+ 
+Header byte:  F4
+Length byte:  1F
+Data bytes:  50 30 01 03 05 06 07 08 0A 0C 0E 0F 10 11 13 1E 1F 24 27 29 2A 2C 2D 32 34 3D 52 57 5F 78 
+Checksum byte:  89
+ 
+Header byte:  4F
+Length byte:  52
+Data bytes:  D0 30 01 00 03 00 05 00 06 00 07 00 08 00 0A 00 0C 3E 0E 31 38 0F 00 81 10 00 11 00 00 13 00 D6 1E 00 00 1F 00 24 00 27 32 29 8F A0 2A 00 2C 00 2D 00 32 00 34 03 70 3D 00 00 52 00 00 30 00 03 05 00 0D 29 00 02 25 57 00 19 2A 5F 00 22 78 00 8A 
+Checksum byte:  5F
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  56 01 
+Checksum byte:  A0
+ 
+Header byte:  4F
+Length byte:  10
+Data bytes:  D6 01 04 02 01 07 07 01 00 A3 01 00 97 01 01 
+Checksum byte:  BB
+ 
+Header byte:  F4
+Length byte:  1F
+Data bytes:  50 30 01 03 05 06 07 08 0A 0C 0E 0F 10 11 13 1E 1F 24 27 29 2A 2C 2D 32 34 3D 52 57 5F 78 
+Checksum byte:  89
+ 
+Header byte:  4F
+Length byte:  52
+Data bytes:  D0 30 01 00 03 00 05 00 06 00 07 00 08 00 0A 00 0C 3E 0E 31 38 0F 00 81 10 00 11 00 00 13 00 DC 1E 00 00 1F 00 24 00 27 32 29 8F A0 2A 00 2C 00 2D 00 32 00 34 03 70 3D 00 00 52 00 00 30 00 03 05 00 0D 29 00 02 25 57 00 19 2B 5F 00 22 78 00 8A 
+Checksum byte:  54
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  56 01 
+Checksum byte:  A0
+ 
+Header byte:  4F
+Length byte:  10
+Data bytes:  D6 01 04 02 01 07 07 01 00 A3 01 00 97 01 01 
+Checksum byte:  BB
+ 
+Header byte:  F4
+Length byte:  1F
+Data bytes:  50 30 01 03 05 06 07 08 0A 0C 0E 0F 10 11 13 1E 1F 24 27 29 2A 2C 2D 32 34 3D 52 57 5F 78 
+Checksum byte:  89
+ 
+Header byte:  4F
+Length byte:  52
+Data bytes:  D0 30 01 00 03 00 05 00 06 00 07 00 08 00 0A 00 0C 3E 0E 31 38 0F 00 81 10 00 11 00 00 13 00 DC 1E 00 00 1F 00 24 00 27 32 29 8F A0 2A 00 2C 00 2D 00 32 00 34 03 70 3D 00 00 52 00 00 30 00 03 05 00 0D 29 00 02 25 57 00 19 2B 5F 00 22 78 00 8A 
+Checksum byte:  54
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  56 01 
+Checksum byte:  A0
+ 
+Header byte:  4F
+Length byte:  10
+Data bytes:  D6 01 04 02 01 07 07 01 00 A3 01 00 97 01 01 
+Checksum byte:  BB
+ 
+Header byte:  F4
+Length byte:  1F
+Data bytes:  50 30 01 03 05 06 07 08 0A 0C 0E 0F 10 11 13 1E 1F 24 27 29 2A 2C 2D 32 34 3D 52 57 5F 78 
+Checksum byte:  89
+ 
+Header byte:  4F
+Length byte:  52
+Data bytes:  D0 30 01 00 03 00 05 00 06 00 07 00 08 00 0A 00 0C 3E 0E 31 38 0F 00 81 10 00 11 00 00 13 00 DE 1E 00 00 1F 00 24 00 27 32 29 8F A0 2A 00 2C 00 2D 00 32 00 34 03 70 3D 00 00 52 00 00 30 00 03 05 00 0D 29 00 02 25 57 00 19 2B 5F 00 22 78 00 8A 
+Checksum byte:  56
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  56 01 
+Checksum byte:  A0
+ 
+Header byte:  4F
+Length byte:  10
+Data bytes:  D6 01 04 02 01 07 07 01 00 A3 01 00 97 01 01 
+Checksum byte:  BB
+ 
+Header byte:  F4
+Length byte:  1F
+Data bytes:  50 30 01 03 05 06 07 08 0A 0C 0E 0F 10 11 13 1E 1F 24 27 29 2A 2C 2D 32 34 3D 52 57 5F 78 
+Checksum byte:  89
+ 
+Header byte:  4F
+Length byte:  52
+Data bytes:  D0 30 01 00 03 00 05 00 06 00 07 00 08 00 0A 00 0C 3E 0E 31 38 0F 00 81 10 00 11 00 00 13 00 DC 1E 00 00 1F 00 24 00 27 32 29 8F A0 2A 00 2C 00 2D 00 32 00 34 03 70 3D 00 00 52 00 00 30 00 03 05 00 0D 29 00 02 25 57 00 19 2B 5F 00 22 78 00 8A 
+Checksum byte:  54
+ 
+Header byte:  F4
+Length byte:  03
+Data bytes:  56 01 
+Checksum byte:  A0
+ 
+Header byte:  4F
+Length byte:  10
+Data bytes:  D6 01 04 02 01 07 07 01 00 A3 01 00 97 01 01 
+Checksum byte:  BB
