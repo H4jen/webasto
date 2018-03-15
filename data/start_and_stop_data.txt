@@ -1,14 +1,35 @@
-HeHello world
+--------------- From documentation -------------------
+
+Initialization
+BREAK set for 50ms
+BREAK reset and wait 50ms
+After that, the following transaction takes place
+TX f4 03 51 0a ac
+RX 4f 04 d1 0a 33 a3
+TX f4 03 51 0b ad
+RX 4f 0b d1 0b 50 51 33 35 20 53 48 20 82
+TX f4 03 51 0c aa
+RX 4f 0a d1 0c 71 7c c4 e7 3f 80 00 09
+TX f4 02 38 ce
+RX 4f 09 b8 0b 00 00 00 00 03 dd 2b
+
+The heater does not seem to respond without the break sequence. But it is
+not really clear what its purpose is.
+
+-------------- Below this line the start of the diagnosis was pressed -------------
+//Gets version of WBUS protocol
 Header byte:  F4
 Length byte:  03
 Data bytes:  51 0A 
 Checksum byte:  AC
- 
+
 Header byte:  4F
 Length byte:  04
 Data bytes:  D1 0A 41 
 Checksum byte:  D1
  
+---------------------
+//Do some component test. Unknown...
 Header byte:  F4
 Length byte:  03
 Data bytes:  45 31 
@@ -18,23 +39,28 @@ Header byte:  4F
 Length byte:  0D
 Data bytes:  C5 31 01 02 02 05 03 07 05 0A 0A 0A 
 Checksum byte:  B9
- 
+
+----------------------
+//Unknown read/write
 Header byte:  F4
 Length byte:  03
 Data bytes:  51 31 
 Checksum byte:  97
- 
+
 Header byte:  4F
 Length byte:  16
 Data bytes:  D1 31 01 02 03 04 06 07 08 09 0B 0C 0D 0E 0F 10 12 15 18 19 1A 
 Checksum byte:  BA
- 
+
+----------------------
+//Unknown read/write
 Header byte:  F4
 Length byte:  16
 Data bytes:  51 30 01 02 03 04 06 07 08 09 0B 0C 0D 0E 0F 10 12 15 18 19 1A 
 Checksum byte:  80
- 
- 
+
+-------------------
+//Unknown read/write
 Header byte:  F4
 Length byte:  03
 Data bytes:  50 31 
@@ -44,7 +70,9 @@ Header byte:  4F
 Length byte:  41
 Data bytes:  D0 31 01 03 05 06 07 08 0A 0C 0D 0E 0F 10 11 13 14 19 1A 1D 1E 1F 21 24 26 27 29 2A 2B 2C 2D 2F 32 33 34 35 36 37 39 3A 3B 3D 41 42 43 44 50 52 54 57 5F 6C 77 78 79 7A F7 F8 F9 FA FB FC FD FE 
 Checksum byte:  C6
- 
+
+--------------------
+//Check supported functions 
 Header byte:  F4
 Length byte:  03
 Data bytes:  51 0C 
@@ -55,6 +83,8 @@ Length byte:  0A
 Data bytes:  D1 0C DA 5D F8 DA 39 00 04 
 Checksum byte:  00
  
+--------------------
+//Mysterious command from diagnosis
 Header byte:  F4
 Length byte:  02
 Data bytes:  38 
@@ -65,6 +95,8 @@ Length byte:  0B
 Data bytes:  B8 0A 00 00 02 BE 02 BF 04 00 
 Checksum byte:  F3
  
+-------------------
+//Read some data.
 Header byte:  F4
 Length byte:  03
 Data bytes:  53 02 
@@ -74,7 +106,9 @@ Header byte:  4F
 Length byte:  11
 Data bytes:  D3 02 29 04 23 28 2C EC 14 3E 80 32 C8 3E 80 06 
 Checksum byte:  81
- 
+
+---------------------
+// Read CO2 calibration
 Header byte:  F4
 Length byte:  03
 Data bytes:  57 01 
@@ -84,7 +118,9 @@ Header byte:  4F
 Length byte:  06
 Data bytes:  D7 01 81 72 8D 
 Checksum byte:  E1
- 
+
+------------------------------------ Below this the below 2xdiagnosisc commands are sent infinite -----------------
+
 Header byte:  F4
 Length byte:  1F
 Data bytes:  50 30 01 03 05 06 07 08 0A 0C 0E 0F 10 11 13 1E 1F 24 27 29 2A 2C 2D 32 34 3D 52 57 5F 78 
