@@ -23,25 +23,6 @@
 #define INVERT_SIGNAL false
 
 #define BLINK_DELAY_MS 2400
-//Baud rate of software serial (interface to Heater)
-//#define BAUD_RATE 2400
-
-//#define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
-//#ifdef DEBUG    //Macros are usually in all capital letters.
-//  #define DPRINT(...)    Serial.print(__VA_ARGS__)     //DPRINT is a macro, debug print
-//  #define DPRINTHEX(...) debugprinthex(__VA_ARGS__,0)
-//  #define DPRINTLN(...)  Serial.println(__VA_ARGS__)   //DPRINTLN is a macro, debug print with new line
-//  #define DPRINTLNHEX(...) debugprinthex(__VA_ARGS__,1)
-//#else
-//  #define DPRINT(...)     //now defines a blank line
-//  #define DPRINTLN(...)   //now defines a blank line
-//  #define DPRINTHEX(...)
-//  #define DPRINTLNHEX(...)
-//#endif
-
-//holds main communication with wbus to my 
-//class w_bus wbus;
-extern struct rx_message rx_msg;
 
 void debugprinthex(int c,int newline) 
 {
@@ -85,99 +66,6 @@ void init_board() {
   lcd.print("test stuff!");
 }
 
-
-//enum rx_reception_states {START, FINDHEADER, READLENGTH, READDATA, RESET_STATE, CHECKSUM_CHECK, PARSE_MESSAGE};
-//Keeps track of which state the RX is in.,
-//enum rx_reception_states rx_state = START;
-
-//Webasto communication. It is assumed that it is always the master (WTT) that initiates and requests information from the slave (heater)
-//The read serial data function reads the serial data until a valid header is found. When the header is found it continues to read the message. 
-//When a valid message has been read, the function waits to read a valid RX response. The TX com is always echoed back via K-line so this will work.
-
-/*
-
-void readSerialData(void)
-{
- //The reception of a message is implemented as a state machine 
- //Read is blocking. Wait until a message is read before doing anything else...
- //Need timeout?
- while (mySerial->available()){
- 	int rxByte = 0;
-
- 	switch(rx_state) {
-	case START:
-		rx_state = FINDHEADER;
-		break;	
-	case FINDHEADER:
-		rxByte = mySerial->read();
-		//Below if statement could be flawed!!
-		if((rxByte == TXHEADER) || (rxByte == RXHEADER)) {
-		        rx_state = READLENGTH;
-			rx_msg.header = rxByte;
-		}
-		break;
-	//Header received
-	case READLENGTH:
-		rxByte = mySerial->read();
-		if((rxByte < 128) && (rxByte > 1)) {
-			rx_state =READDATA;
-			rx_msg.length=rxByte;
-		}
-		else rx_state = RESET_STATE;
-		break;
-	case READDATA:
-        	rxByte = mySerial->read();
-                rx_msg.data[rx_msg.nr_data_read] = rxByte;
-		rx_msg.nr_data_read++;
-		if(rx_msg.nr_data_read >= rx_msg.length){
-			 DPRINT("Header byte: ");
-			 DPRINTLNHEX(rx_msg.header);
-			 DPRINT("Length byte: ");
-                         DPRINTLNHEX(rx_msg.length);
-	    		 DPRINT("Data bytes: ");
-			 int XOR = 0;
-			 XOR = XOR^rx_msg.header^rx_msg.length;
-			 for(unsigned int i=0;i<(rx_msg.length-1);i++) {
-				XOR = XOR ^ rx_msg.data[i];
-				DPRINTHEX(rx_msg.data[i]);
-			 }
-			 DPRINTLN(' ');
-			 DPRINT("Checksum byte: ");
-			 rx_msg.checksum = rxByte;
-			 DPRINTLNHEX(rxByte);
-			 
-			 if(XOR == rx_msg.checksum) {
-			 	rx_state = PARSE_MESSAGE;
-				rx_msg.valid_message = true;
-				//calls message parser with global struct
-				parse_message();
-			 }
-			 else {
-			 	rx_state = RESET_STATE;
-				DPRINTLN("Checksum check FAILED!!");
-			 }
-		}
-                break;
-	case PARSE_MESSAGE:
-		//Do message parsing
-		rx_state = RESET_STATE;
-		break;
-	case RESET_STATE:
-		rx_msg.header=0;
-  		rx_msg.length=0;
-  		rx_msg.nr_data_read=0;
-		rx_msg.checksum=0;
-		rx_msg.valid_message=false;
-		rx_state=START;
-		DPRINTLN(' '); 
-		break;
- 	default:
-		break;
-	}
- }
-}*/
-
-
 int main (void)
 {
 //Init arduino. do this before anything else happens...
@@ -191,6 +79,7 @@ while(1) {
   
   //Detect if webasto communication is up and running. If not try to start (inf?)
   //Display status in LCD display.
+  wbus.sendSerialBreak();
   wbus.sendTXmessage(TX_MESSAGE_INIT_1);
 
  }

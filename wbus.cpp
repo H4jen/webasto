@@ -24,6 +24,17 @@ w_bus::w_bus () {
 }
 
 
+void w_bus::sendSerialBreak(void)
+{
+    //pinMode(11,OUTPUT);
+    digitalWrite(txPin, HIGH);  // Send BREAK
+    delay(1000);              // for 10ms
+    digitalWrite(txPin, LOW);  // Set pin to serial low state
+    delay(50); //wait default 50ms 
+    digitalWrite(txPin, HIGH);  // Send BREAK
+    delay(50);              // for 10ms
+}
+
 void w_bus::readSerialData(void)
 {
  //The reception of a message is implemented as a state machine 

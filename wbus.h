@@ -1,6 +1,7 @@
 #ifndef WBUS_H
 #define WBUS_H
 
+#include <Arduino.h>
 #include <CustomSoftwareSerial.h>
 #include "webasto.h"
 
@@ -25,12 +26,13 @@ class w_bus {
     int  BAUDRATE = 2400;
     int  PARITY = CSERIAL_8E1;
     int  TXHEADER = 0xf4;
-    int RXHEADER = 0x4f;
+    int  RXHEADER = 0x4f;
     enum rx_reception_states {START, FINDHEADER, READLENGTH, READDATA, RESET_STATE, CHECKSUM_CHECK, PARSE_MESSAGE};
     enum rx_reception_states rx_state = START;
 
 public:
     w_bus();
+    void sendSerialBreak(void);
     void sendTXmessage(const int msg[]);
     void readSerialData(void);
 
