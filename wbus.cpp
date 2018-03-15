@@ -1,6 +1,9 @@
 #include "wbus.h"
 #include "webasto.h"
 
+//ms to wait after a send to the UART
+#define SEND_TX_DELAY 100
+
 const int TX_MESSAGE_INIT_1[]={6,0xF4,0x03,0x51,0x0A,0xAC};
 
 //Uses the global
@@ -9,38 +12,63 @@ void parse_message() {
 }
 
 
-struct rx_message rx_msg;
+//struct rx_message rx_msg;
 
 void w_bus::sendTXmessage(const int msg[])
 {
-for(int i=1;i<msg[0];i++) mySerial->write(msg[i]);
+    for(int i=1;i<msg[0];i++) Serial1.write(msg[i]);
+    delay(SEND_TX_DELAY);
+    
 }
 
-//WBUS constructor.
+    //WBUS constructor.
 w_bus::w_bus () {
     //Open com with serial port to webasto heater.
-    mySerial = new CustomSoftwareSerial(rxPin, txPin); // rx, tx
-    mySerial->begin(BAUDRATE, PARITY);         // Baud rate: 9600, configuration: CSERIAL_8N1
+    Serial1.begin(BAUDRATE,PARITY);
 }
 
 
 void w_bus::sendSerialBreak(void)
 {
-    //pinMode(11,OUTPUT);
-    digitalWrite(txPin, HIGH);  // Send BREAK
+    //Turn off serial port
+    Serial1.end();
+    digitalWrite(txPin, HIGH);  // Send delay HIGH IDLE
     delay(1000);              // for 10ms
-    digitalWrite(txPin, LOW);  // Set pin to serial low state
+    digitalWrite(txPin, LOW);  // Set serial break
     delay(50); //wait default 50ms 
-    digitalWrite(txPin, HIGH);  // Send BREAK
-    delay(50);              // for 10ms
+    digitalWrite(txPin, HIGH);  // reset serial break
+    Serial1.begin(BAUDRATE,PARITY);
 }
+
+void w_bus::initSequence(void) 
+{
+     sendTXmessage(TX_MESSAGE_INIT_1);
+     sendTXmessage(TX_MESSAGE_INIT_1);
+}
+
+void w_bus::printMsgDebug(void)
+{
+    DPRINTHEX(rx_msg.header);
+    DPRINT(' ');
+    DPRINTHEX(rx_msg.length);
+    DPRINT(' ');
+    for(int i=0;i<(rx_msg.length-1);i++) {
+        DPRINTHEX(rx_msg.data[i]);
+        DPRINT(' ');
+    }
+    DPRINTHEX(rx_msg.checksum);
+    DPRINTLN(); 
+}
+
 
 void w_bus::readSerialData(void)
 {
  //The reception of a message is implemented as a state machine 
  //Read is blocking. Wait until a message is read before doing anything else...
- //Need timeout?
- while (mySerial->available()){
+ //Need timeout? 
+ //DPRINTLN("im here2");
+ while (Serial1.available()>0){
+    //DPRINTLN("im here3");
     int rxByte = 0;
 
     switch(rx_state) {
@@ -48,16 +76,17 @@ void w_bus::readSerialData(void)
         rx_state = FINDHEADER;
         break;  
     case FINDHEADER:
-        rxByte = mySerial->read();
+        rxByte = Serial1.read();
+        //DPRINTLNHEX(rxByte); 
         //Below if statement could be flawed!!
         if((rxByte == TXHEADER) || (rxByte == RXHEADER)) {
                 rx_state = READLENGTH;
-            rx_msg.header = rxByte;
+                rx_msg.header = rxByte;
         }
         break;
     //Header received
     case READLENGTH:
-        rxByte = mySerial->read();
+        rxByte = Serial1.read();
         if((rxByte < 128) && (rxByte > 1)) {
             rx_state =READDATA;
             rx_msg.length=rxByte;
@@ -65,29 +94,21 @@ void w_bus::readSerialData(void)
         else rx_state = RESET_STATE;
         break;
     case READDATA:
-            rxByte = mySerial->read();
+            rxByte = Serial1.read();
                 rx_msg.data[rx_msg.nr_data_read] = rxByte;
         rx_msg.nr_data_read++;
         if(rx_msg.nr_data_read >= rx_msg.length){
-             DPRINT("Header byte: ");
-             DPRINTLNHEX(rx_msg.header);
-             DPRINT("Length byte: ");
-                         DPRINTLNHEX(rx_msg.length);
-                 DPRINT("Data bytes: ");
              int XOR = 0;
              XOR = XOR^rx_msg.header^rx_msg.length;
-             for(unsigned int i=0;i<(rx_msg.length-1);i++) {
+             for(int i=0;i<(rx_msg.length-1);i++) {
                 XOR = XOR ^ rx_msg.data[i];
-                DPRINTHEX(rx_msg.data[i]);
              }
-             DPRINTLN(' ');
-             DPRINT("Checksum byte: ");
              rx_msg.checksum = rxByte;
-             DPRINTLNHEX(rxByte);
-
              if(XOR == rx_msg.checksum) {
                 rx_state = PARSE_MESSAGE;
                 rx_msg.valid_message = true;
+                //Print debug message
+                printMsgDebug();
                 //calls message parser with global struct
                 parse_message();
              }

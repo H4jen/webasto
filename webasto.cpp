@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <CustomSoftwareSerial.h>
+//#include <CustomSoftwareSerial.h>
 #include <Wire.h>
 #include <LCD.h>
 #include <LiquidCrystal_I2C.h>
@@ -17,11 +17,7 @@
 #define D7_pin  7
 
 
-//Change this is other header is needed. My air top evo 40 uses F4 from WTT side and 4F from multicontrol / heater side.
-//#define TXHEADER 0xf4
-//#define RXHEADER 0x4f
 #define INVERT_SIGNAL false
-
 #define BLINK_DELAY_MS 2400
 
 void debugprinthex(int c,int newline) 
@@ -35,27 +31,19 @@ void debugprinthex(int c,int newline)
   if(newline == 1) Serial.println();
 }
 
-//can only be pins 8-13 because prtmapping is hardcoded to PORTB 
-//uint8_t rxPin=10;
-//uint8_t txPin=11;
-
-// set up a new serial port
-//CustomSoftwareSerial* mySerial;
 LiquidCrystal_I2C	lcd(I2C_ADDR,En_pin,Rw_pin,Rs_pin,D4_pin,D5_pin,D6_pin,D7_pin);
 
 void init_board() {
  
  init();
- //mySerial = new CustomSoftwareSerial(rxPin, txPin); // rx, tx
- //mySerial->begin(BAUD_RATE, CSERIAL_8E1);         // Baud rate: 9600, configuration: CSERIAL_8N1
 
 #ifdef DEBUG
  Serial.begin(9600);
  DPRINTLN("Hello world");
  delay(2000);
 #endif
-  lcd.begin (20,4);
 
+  lcd.begin (20,4);
   // Switch on the backlight
   lcd.setBacklightPin(BACKLIGHT_PIN,POSITIVE);
   lcd.setBacklight(HIGH);
@@ -71,16 +59,38 @@ int main (void)
 //Init arduino. do this before anything else happens...
 init_board();
 
-//main comm object.
+//Initialize the main wbus com object.
 class w_bus wbus;
 
+
+enum MAIN_STATES {START, INIT_WBUS};
+enum MAIN_STATES MAIN_STATE = START;
+    
 // main loop
 while(1) {
   
   //Detect if webasto communication is up and running. If not try to start (inf?)
   //Display status in LCD display.
-  wbus.sendSerialBreak();
-  wbus.sendTXmessage(TX_MESSAGE_INIT_1);
+  
+    switch(MAIN_STATE) {
+  
+     case START:
+        MAIN_STATE = INIT_WBUS;
+        wbus.sendSerialBreak();
+        break; 
+     case INIT_WBUS:
+        //wbus.sendSerialBreak();
+        wbus.initSequence();
+        wbus.readSerialData();
+        //wbus.initSequence();
+        break;
+    }
+    //wbus.sendSerialBreak();
+    //wbus.sendTXmessage(TX_MESSAGE_INIT_1);
 
  }
+    //Blocks until all serial data is read!
+    while (Serial1.available()) {
+        wbus.readSerialData();
+    } 
 }

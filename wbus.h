@@ -2,7 +2,7 @@
 #define WBUS_H
 
 #include <Arduino.h>
-#include <CustomSoftwareSerial.h>
+//#include <CustomSoftwareSerial.h>
 #include "webasto.h"
 
 extern const int TX_MESSAGE_INIT_1[];
@@ -19,12 +19,14 @@ struct rx_message
 
 //Define the wbus class
 class w_bus {
-    CustomSoftwareSerial* mySerial;
+    //Holds communication object
+    //CustomSoftwareSerial* mySerial;
     //can only be pins 8-13 because prtmapping is hardcoded to PORTB 
-    uint8_t rxPin=10;
-    uint8_t txPin=11;
+    struct rx_message rx_msg;
+    uint8_t rxPin=19;
+    uint8_t txPin=18;
     int  BAUDRATE = 2400;
-    int  PARITY = CSERIAL_8E1;
+    int  PARITY = SERIAL_8E1;
     int  TXHEADER = 0xf4;
     int  RXHEADER = 0x4f;
     enum rx_reception_states {START, FINDHEADER, READLENGTH, READDATA, RESET_STATE, CHECKSUM_CHECK, PARSE_MESSAGE};
@@ -32,10 +34,11 @@ class w_bus {
 
 public:
     w_bus();
+    void printMsgDebug(void);
     void sendSerialBreak(void);
     void sendTXmessage(const int msg[]);
     void readSerialData(void);
-
+    void initSequence(void);
 };
 
 
