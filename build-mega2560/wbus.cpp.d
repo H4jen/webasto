@@ -9,6 +9,4 @@ build-mega2560/wbus.cpp.o: wbus.cpp wbus.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/Printable.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/new.h \
  /usr/share/arduino/hardware/arduino//variants/mega/pins_arduino.h \
- webasto.h \
- /usr/share/arduino/libraries/CustomSoftwareSerial/CustomSoftwareSerial.h \
- /usr/share/arduino/hardware/arduino//cores/arduino/Stream.h
+ webasto.h

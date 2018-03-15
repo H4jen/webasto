@@ -31,8 +31,12 @@ class w_bus {
     int  RXHEADER = 0x4f;
     enum rx_reception_states {START, FINDHEADER, READLENGTH, READDATA, RESET_STATE, CHECKSUM_CHECK, PARSE_MESSAGE};
     enum rx_reception_states rx_state = START;
+    //indicates if the wbus is initialized and ready to go. (1 = ok, 0 = in progressm, -1 failed)
+    //int wbus_ok=0;
 
 public:
+    int wbus_ok=0;
+    
     w_bus();
     void printMsgDebug(void);
     void sendSerialBreak(void);

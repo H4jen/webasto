@@ -15,5 +15,4 @@ build-mega2560/webasto.cpp.o: webasto.cpp \
  /usr/share/arduino/hardware/arduino//cores/arduino/Print.h \
  /usr/share/arduino/libraries/LiquidCrystal/LiquidCrystal_I2C.h \
  /usr/share/arduino/libraries/LiquidCrystal/I2CIO.h \
- /usr/share/arduino/libraries/LiquidCrystal/LCD.h wbus.h webasto.h \
- /usr/share/arduino/libraries/CustomSoftwareSerial/CustomSoftwareSerial.h
+ /usr/share/arduino/libraries/LiquidCrystal/LCD.h wbus.h webasto.h

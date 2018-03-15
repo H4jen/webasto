@@ -63,7 +63,7 @@ init_board();
 class w_bus wbus;
 
 
-enum MAIN_STATES {START, INIT_WBUS};
+enum MAIN_STATES {START, INIT_WBUS, WBUS_OK};
 enum MAIN_STATES MAIN_STATE = START;
     
 // main loop
@@ -79,11 +79,16 @@ while(1) {
         wbus.sendSerialBreak();
         break; 
      case INIT_WBUS:
-        //wbus.sendSerialBreak();
         wbus.initSequence();
-        wbus.readSerialData();
-        //wbus.initSequence();
+        if(wbus.wbus_ok == 1) MAIN_STATE = WBUS_OK;
+        else if (wbus.wbus_ok == -1) MAIN_STATE = START;
+        
         break;
+     case WBUS_OK:
+        wbus.initSequence();
+        //if(wbus.wbus_ok) MAIN_STATE = WBUS_OK
+        break;
+                                    
     }
     //wbus.sendSerialBreak();
     //wbus.sendTXmessage(TX_MESSAGE_INIT_1);

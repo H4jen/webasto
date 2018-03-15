@@ -19,7 +19,6 @@
 
 
 #include <Arduino.h>
-#include <CustomSoftwareSerial.h>
 
 //Here we define global variables we need to reference
 //This global struct holds the message read from the webasto.
