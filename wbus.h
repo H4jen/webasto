@@ -6,6 +6,12 @@
 #include "webasto.h"
 
 extern const int TX_MESSAGE_INIT_1[];
+extern const int TX_MESSAGE_INIT_2[];
+extern const int TX_MESSAGE_INIT_3[];
+extern const int TX_MESSAGE_INIT_4[];
+extern const int TX_MESSAGE_INIT_5[];
+extern const int TX_MESSAGE_INIT_6[];
+//extern const int TX_MESSAGE_INIT_1[];
 
 struct rx_message
 {

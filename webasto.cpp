@@ -68,12 +68,13 @@ enum MAIN_STATES MAIN_STATE = START;
     
 // main loop
 while(1) {
-  
+
   //Detect if webasto communication is up and running. If not try to start (inf?)
   //Display status in LCD display.
-  
+
+
     switch(MAIN_STATE) {
-  
+
      case START:
         MAIN_STATE = INIT_WBUS;
         wbus.sendSerialBreak();
@@ -82,20 +83,20 @@ while(1) {
         wbus.initSequence();
         if(wbus.wbus_ok == 1) MAIN_STATE = WBUS_OK;
         else if (wbus.wbus_ok == -1) MAIN_STATE = START;
-        
         break;
      case WBUS_OK:
         wbus.initSequence();
         //if(wbus.wbus_ok) MAIN_STATE = WBUS_OK
         break;
-                                    
     }
+   
+    delay(3000);
     //wbus.sendSerialBreak();
     //wbus.sendTXmessage(TX_MESSAGE_INIT_1);
 
- }
     //Blocks until all serial data is read!
     while (Serial1.available()) {
         wbus.readSerialData();
     } 
+ }
 }

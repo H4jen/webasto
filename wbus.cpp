@@ -2,9 +2,15 @@
 #include "webasto.h"
 
 //ms to wait after a send to the UART
-#define SEND_TX_DELAY 100
+#define SEND_TX_DELAY 1000
 
 const int TX_MESSAGE_INIT_1[]={6,0xF4,0x03,0x51,0x0A,0xAC};
+const int TX_MESSAGE_INIT_2[]={6,0xF4,0x03,0x45,0x31,0x83};
+const int TX_MESSAGE_INIT_3[]={6,0xF4,0x03,0x51,0x31,0x97};
+const int TX_MESSAGE_INIT_4[]={6,0xF4,0x03,0x51,0x0c,0xAA};
+const int TX_MESSAGE_INIT_5[]={5,0xF4,0x02,0x38,0xCE};
+const int TX_MESSAGE_INIT_6[]={6,0xF4,0x03,0x53,0x02,0xA6};
+const int TX_MESSAGE_INIT_7[]={6,0xF4,0x03,0x57,0x01,0xA1};
 
 //Uses the global
 void parse_message() {
@@ -17,7 +23,7 @@ void parse_message() {
 void w_bus::sendTXmessage(const int msg[])
 {
     for(int i=1;i<msg[0];i++) Serial1.write(msg[i]);
-    delay(SEND_TX_DELAY);
+    //delay(SEND_TX_DELAY);
     
 }
 
@@ -37,13 +43,20 @@ void w_bus::sendSerialBreak(void)
     digitalWrite(txPin, LOW);  // Set serial break
     delay(50); //wait default 50ms 
     digitalWrite(txPin, HIGH);  // reset serial break
+    delay(50); //wait default 50ms
     Serial1.begin(BAUDRATE,PARITY);
 }
 
 void w_bus::initSequence(void) 
 {
      sendTXmessage(TX_MESSAGE_INIT_1);
-     sendTXmessage(TX_MESSAGE_INIT_1);
+     //sendTXmessage(TX_MESSAGE_INIT_2);
+     //sendTXmessage(TX_MESSAGE_INIT_3);
+     //sendTXmessage(TX_MESSAGE_INIT_4);
+     //sendTXmessage(TX_MESSAGE_INIT_5);
+     //sendTXmessage(TX_MESSAGE_INIT_6);
+     //sendTXmessage(TX_MESSAGE_INIT_7);
+       
 }
 
 void w_bus::printMsgDebug(void)
@@ -68,16 +81,14 @@ void w_bus::readSerialData(void)
  //Need timeout? 
  //DPRINTLN("im here2");
  while (Serial1.available()>0){
-    //DPRINTLN("im here3");
     int rxByte = 0;
-
     switch(rx_state) {
     case START:
         rx_state = FINDHEADER;
         break;  
     case FINDHEADER:
+        
         rxByte = Serial1.read();
-        //DPRINTLNHEX(rxByte); 
         //Below if statement could be flawed!!
         if((rxByte == TXHEADER) || (rxByte == RXHEADER)) {
                 rx_state = READLENGTH;
@@ -129,7 +140,6 @@ void w_bus::readSerialData(void)
         rx_msg.checksum=0;
         rx_msg.valid_message=false;
         rx_state=START;
-        DPRINTLN(' '); 
         break;
     default:
         break;
