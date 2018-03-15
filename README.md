@@ -79,6 +79,35 @@ This concludes that the sniffer part now works. The webasto sniffer is copied to
 
 To do loopback tests and also check that you send the correct packets to the wbus the arduino uno that was first used was swapped to an arduino mega with 4 physical uarts. It is possible to solve it with arduino UNO and <customsoftwareserial> but to save time the uno was skipped.
 
+SW to control webasto
+---------------------
+First test was to send some init commands to get the webasto up and running
+
+ F4  03  51  0A  AC                                                                                                                     
+ 4F  04  D1  0A  41  D1                                                                                                                 
+ F4  03  45  31  83                                                                                                                     
+ 4F  0D  C5  31  01  02  02  05  03  07  05  0A  0A  0A  B9                                                                             
+ F4  03  51  31  97                                                                                                                     
+ 4F  16  D1  31  01  02  03  04  06  07  08  09  0B  0C  0D  0E  0F  10  12  15  18  19  1A  BA                                         
+ F4  03  51  0C  AA                                                                                                                     
+ 4F  0A  D1  0C  DA  5D  F8  DA  39  00  04  00                                                                                         
+ F4  02  38  CE                                                                                                                         
+ 4F  0B  B8  0A  00  00  02  BE  02  BF  04  00  F3                                                                                     
+ F4  03  53  02  A6
+ 4F  11  D3  02  29  04  23  28  2C  EC  14  3E  80  32  C8  3E  80  06  81
+ F4  03  57  01  A1
+ 4F  06  D7  01  81  72  8D  E1
+-------------- above is last init string -----------------
+-------------- Below is first status command -------------
+ F4  03  56  01  A0
+ 4F  10  D6  01  04  02  01  07  07  01  00  A3  01  00  97  01  01  BB
+We have reached the WBUS_OK state
+We have reached the WBUS_OK state
+
+The above shows that everything is working as expected. Now it is time to build the message parser.
+
+
+
 
 
 
