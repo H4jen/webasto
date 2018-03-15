@@ -1,3 +1,6 @@
+#ifndef WEBASTO_H
+#define WEBASTO_H
+
 #define BAUD_RATE 2400
 
 #define DEBUG   //If you comment this line, the DPRINT & DPRINTLN lines are defined as blank.
@@ -12,8 +15,6 @@
 #define DPRINTHEX(...)
 #define DPRINTLNHEX(...)
 #endif
-#ifndef WEBASTO_H
-#define WEBASTO_H
 
 #define MESSAGE_BUFFER_SIZE 128
 

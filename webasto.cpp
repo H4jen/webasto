@@ -81,16 +81,18 @@ while(1) {
         break; 
      case INIT_WBUS:
         wbus.initSequence();
-        if(wbus.wbus_ok == 1) MAIN_STATE = WBUS_OK;
-        else if (wbus.wbus_ok == -1) MAIN_STATE = START;
+        if(wbus.wbus_ok) MAIN_STATE = WBUS_OK;
         break;
      case WBUS_OK:
-        wbus.initSequence();
-        //if(wbus.wbus_ok) MAIN_STATE = WBUS_OK
+        DPRINTLN("We have reached the WBUS_OK state");
+        if (!wbus.wbus_ok) {
+            DPRINTLN("Trying to reset the Wbus");
+            MAIN_STATE = START;
+        }
         break;
     }
    
-    delay(3000);
+    //delay(1000);
     //wbus.sendSerialBreak();
     //wbus.sendTXmessage(TX_MESSAGE_INIT_1);
 

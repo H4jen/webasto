@@ -38,10 +38,16 @@ class w_bus {
     enum rx_reception_states {START, FINDHEADER, READLENGTH, READDATA, RESET_STATE, CHECKSUM_CHECK, PARSE_MESSAGE};
     enum rx_reception_states rx_state = START;
     //indicates if the wbus is initialized and ready to go. (1 = ok, 0 = in progressm, -1 failed)
+    //The flag below is implemented so that a sent request should result in a RX response.
+    bool waiting_for_rx_response = false;
+    //Number of external loops before timeout and rx_response cleared.
+    int  time_out_loops=10;
+    //Keeps track of the number of times trying to read from RX without reponse. Reset, when a succespul read has been done.
+    int  number_of_rx_loops=0;
     //int wbus_ok=0;
 
 public:
-    int wbus_ok=0;
+    bool wbus_ok=false;
     
     w_bus();
     void printMsgDebug(void);
