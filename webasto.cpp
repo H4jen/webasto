@@ -17,7 +17,6 @@
 #define D7_pin  7
 
 
-//#define MESSAGE_BUFFER_SIZE 128
 //Change this is other header is needed. My air top evo 40 uses F4 from WTT side and 4F from multicontrol / heater side.
 #define TXHEADER 0xf4
 #define RXHEADER 0x4f
@@ -41,16 +40,7 @@
 #endif
 
 
-//A test message
-//struct rx_message
-//{
-//  int header=0;
-//  int length=0;
-//  int data[MESSAGE_BUFFER_SIZE];
-//  int nr_data_read=0;
-//  int checksum=0; 
-//  bool valid_message = false;
-//} rx_msg;
+extern struct rx_message rx_msg;
 
 void debugprinthex(int c,int newline) 
 {
@@ -71,7 +61,6 @@ uint8_t txPin=11;
 
 // set up a new serial port
 CustomSoftwareSerial* mySerial;
-
 LiquidCrystal_I2C	lcd(I2C_ADDR,En_pin,Rw_pin,Rs_pin,D4_pin,D5_pin,D6_pin,D7_pin);
 
 void init_board() {
@@ -189,6 +178,8 @@ void readSerialData(void)
 }
 
 
+
+
 int main (void)
 {
 //Init arduino
@@ -199,10 +190,10 @@ while(1) {
   
   //Detect if webasto communication is up and running. If not try to start (inf?)
   //Display status in LCD display.
-
+  sendTXmessage(TX_MESSAGE_INIT_1);
 
   //Read data from the serial interface if it is availible and parse message.  
-  readSerialData();
+  //readSerialData();
   //if(rx_msg.size != 0){
 //	for(int i=0; i<rx_msg.size;i++){
   //		DPRINTHEX(rx_msg.string[i]);
