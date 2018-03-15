@@ -97,10 +97,13 @@ First test was to send some init commands to get the webasto up and running
  4F  11  D3  02  29  04  23  28  2C  EC  14  3E  80  32  C8  3E  80  06  81
  F4  03  57  01  A1
  4F  06  D7  01  81  72  8D  E1
+ 
 -------------- above is last init string -----------------
 -------------- Below is first status command -------------
  F4  03  56  01  A0
+ 
  4F  10  D6  01  04  02  01  07  07  01  00  A3  01  00  97  01  01  BB
+ 
 We have reached the WBUS_OK state
 We have reached the WBUS_OK state
 
