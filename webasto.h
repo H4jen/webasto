@@ -9,7 +9,9 @@
 #define DPRINTHEX(...) debugprinthex(__VA_ARGS__,0)
 #define DPRINTLN(...)  Serial.println(__VA_ARGS__)   //DPRINTLN is a macro, debug print with new line
 #define DPRINTLNHEX(...) debugprinthex(__VA_ARGS__,1)
+#define DPRINTC(...) Serial.print(itoa(__VA_ARGS__))
 #else
+#define DPRINTC(...)
 #define DPRINT(...)     //now defines a blank line
 #define DPRINTLN(...)   //now defines a blank line
 #define DPRINTHEX(...)

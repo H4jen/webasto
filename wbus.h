@@ -2,22 +2,21 @@
 #define WBUS_H
 
 #include <Arduino.h>
-//#include <CustomSoftwareSerial.h>
 #include "webasto.h"
 
-extern const int TX_MESSAGE_INIT_1[];
-extern const int TX_MESSAGE_INIT_2[];
-extern const int TX_MESSAGE_INIT_3[];
-extern const int TX_MESSAGE_INIT_4[];
-extern const int TX_MESSAGE_INIT_5[];
-extern const int TX_MESSAGE_INIT_6[];
 //extern const int TX_MESSAGE_INIT_1[];
+//extern const int TX_MESSAGE_INIT_2[];
+//extern const int TX_MESSAGE_INIT_3[];
+//extern const int TX_MESSAGE_INIT_4[];
+//extern const int TX_MESSAGE_INIT_5[];
+//extern const int TX_MESSAGE_INIT_6[];
 
 struct rx_message
 {
   int header=0;
   int length=0;
   int data[MESSAGE_BUFFER_SIZE];
+  char data_string[MESSAGE_BUFFER_SIZE];
   int nr_data_read=0;
   int checksum=0; 
   bool valid_message = false;
@@ -45,10 +44,11 @@ class w_bus {
     //Keeps track of the number of times trying to read from RX without reponse. Reset, when a succespul read has been done.
     int  number_of_rx_loops=0;
     //int wbus_ok=0;
+    String subStringDataMsg(int index);
 
 public:
     bool wbus_ok=false;
-    
+    void parseMessage(void);
     w_bus();
     void printMsgDebug(void);
     void sendSerialBreak(void);

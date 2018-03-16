@@ -1,10 +1,15 @@
 #include "wbus.h"
 #include "webasto.h"
 
+//#define RAWDEBUGOUTPUT
+
 //ms to wait after a send to the UART
 #define SEND_TX_DELAY 300
+// Get Wbus version
 const int TX_MESSAGE_INIT_1[]={6,0xF4,0x03,0x51,0x0A,0xAC};
-const int TX_MESSAGE_INIT_2[]={6,0xF4,0x03,0x45,0x31,0x83};
+//const int TX_MESSAGE_INIT_2[]={6,0xF4,0x03,0x45,0x31,0x83};
+//Get units device name
+const int TX_MESSAGE_INIT_2[]={6,0xF4,0x03,0x51,0x0b,0xAD};
 const int TX_MESSAGE_INIT_3[]={6,0xF4,0x03,0x51,0x31,0x97};
 const int TX_MESSAGE_INIT_4[]={6,0xF4,0x03,0x51,0x0c,0xAA};
 const int TX_MESSAGE_INIT_5[]={5,0xF4,0x02,0x38,0xCE};
@@ -14,10 +19,44 @@ const int TX_MESSAGE_INIT_7[]={6,0xF4,0x03,0x57,0x01,0xA1};
 //Status message sent in loop.
 const int TX_STATUS_1[]={6,0xF4,0x03,0x56,0x01,0xA0};
 
+String w_bus::subStringDataMsg(int index)
+{
+String str = rx_msg.data_string;
+if(index >= rx_msg.length-1) return String("index to large");
 
-//Uses the global
-void parse_message() {
-  //do stuff
+str = str.substring(index,rx_msg.length-1);
+return str;
+}
+
+
+// Uses the global message captured.
+// To reach this point the message needs to be RX and valid
+// This is implicitly assumed.
+void w_bus::parseMessage() {
+
+    //Main parser function
+    switch(rx_msg.data[0]){
+    //Message is a WBUS read message (type 51).
+    case (0xd1):
+        switch(rx_msg.data[1]) {
+        //Version of Wbus
+        case (0x0a):
+            int nibble;
+            nibble = ((rx_msg.data[2] >> 4) & 0x0f);
+            DPRINT("WBUS version: "); DPRINT(nibble);DPRINT(".");
+            nibble = ((rx_msg.data[2] & 0x0f));
+            DPRINTLN(nibble);
+            break;
+            
+        //Device name connected
+        case (0x0b):
+            DPRINT("Device name: "); 
+            DPRINTLN(subStringDataMsg(2));
+            break;                                                                  
+        }
+    break;
+    }
+
 }
 
 
@@ -156,23 +195,28 @@ void w_bus::readSerialData(void)
     case READDATA:
         rxByte = Serial1.read();
         rx_msg.data[rx_msg.nr_data_read] = rxByte;
+        rx_msg.data_string[rx_msg.nr_data_read] = (char)rxByte;
         rx_msg.nr_data_read++;
         if(rx_msg.nr_data_read >= rx_msg.length){
              int XOR = 0;
              XOR = XOR^rx_msg.header^rx_msg.length;
+             //terminate data_string read
+             rx_msg.data_string[rx_msg.nr_data_read]='\0';
              for(int i=0;i<(rx_msg.length-1);i++) {
                 XOR = XOR ^ rx_msg.data[i];
              }
              rx_msg.checksum = rxByte;
              if(XOR == rx_msg.checksum) {
-                rx_state = PARSE_MESSAGE;
+                rx_state = RESET_STATE;
                 rx_msg.valid_message = true;
                 //Print debug message
-                printMsgDebug();
+                #ifdef RAWDEBUGOUTPUT
+                    printMsgDebug();
+                #endif
                 //Do parsing and shit if we received an RX message
                 if(rx_msg.header == RXHEADER) {
                     //calls message parser with global struct
-                    parse_message();
+                    parseMessage();
                     //Clear TX response flag
                     waiting_for_rx_response = false;
                     //Clear timeout loops
@@ -185,10 +229,6 @@ void w_bus::readSerialData(void)
              }
         }
                 break;
-    case PARSE_MESSAGE:
-        //Do message parsing
-        rx_state = RESET_STATE;
-        break;
     case RESET_STATE:
         rx_msg.header=0;
         rx_msg.length=0;
