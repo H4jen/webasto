@@ -13,6 +13,7 @@
 
 struct rx_message
 {
+  int rawMessage=0;
   int header=0;
   int length=0;
   int data[MESSAGE_BUFFER_SIZE];

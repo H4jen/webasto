@@ -1,7 +1,7 @@
 #include "wbus.h"
 #include "webasto.h"
 
-//#define RAWDEBUGOUTPUT
+#define RAWDEBUGOUTPUT
 
 //ms to wait after a send to the UART
 #define SEND_TX_DELAY 300
@@ -10,14 +10,22 @@ const int TX_MESSAGE_INIT_1[]={6,0xF4,0x03,0x51,0x0A,0xAC};
 //const int TX_MESSAGE_INIT_2[]={6,0xF4,0x03,0x45,0x31,0x83};
 //Get units device name
 const int TX_MESSAGE_INIT_2[]={6,0xF4,0x03,0x51,0x0b,0xAD};
-const int TX_MESSAGE_INIT_3[]={6,0xF4,0x03,0x51,0x31,0x97};
-const int TX_MESSAGE_INIT_4[]={6,0xF4,0x03,0x51,0x0c,0xAA};
-const int TX_MESSAGE_INIT_5[]={5,0xF4,0x02,0x38,0xCE};
-const int TX_MESSAGE_INIT_6[]={6,0xF4,0x03,0x53,0x02,0xA6};
-const int TX_MESSAGE_INIT_7[]={6,0xF4,0x03,0x57,0x01,0xA1};
+//const int TX_MESSAGE_INIT_3[]={6,0xF4,0x03,0x51,0x31,0x97};
+const int TX_MESSAGE_INIT_3[]={6,0xF4,0x03,0x51,0x0c,0xAA};
+const int TX_MESSAGE_INIT_4[]={5,0xF4,0x02,0x38,0xCE};
+const int TX_MESSAGE_INIT_5[]={6,0xF4,0x03,0x53,0x02,0xA6};
+const int TX_MESSAGE_INIT_6[]={6,0xF4,0x03,0x57,0x01,0xA1};
 
 //Status message sent in loop.
 const int TX_STATUS_1[]={6,0xF4,0x03,0x56,0x01,0xA0};
+const int TX_STATUS_2[]={34,0xF4,0x1F,0x50,0x30,0x01, 
+                           0x03,0x05,0x06,0x07,0x08,
+                           0x0A,0x0C,0x0E,0x0F,0x10,
+                           0x11,0x13,0x1E,0x1F,0x24, 
+                           0x27,0x29,0x2A,0x2C,0x2D,
+                           0x32,0x34,0x3D,0x52,0x57,
+                           0x5F,0x78,0x89};
+
 
 String w_bus::subStringDataMsg(int index)
 {
@@ -47,16 +55,37 @@ void w_bus::parseMessage() {
             nibble = ((rx_msg.data[2] & 0x0f));
             DPRINTLN(nibble);
             break;
-            
         //Device name connected
         case (0x0b):
-            DPRINT("Device name: "); 
+            DPRINT("Webasto heater control unit: "); 
             DPRINTLN(subStringDataMsg(2));
-            break;                                                                  
+            break;
+        //Device name connected
+        case (0x0c):
+            DPRINTLN("Supported sub-systems: (not implemented in code) "); 
+            //DPRINTLN(subStringDataMsg(2));
+            break;
         }
-    break;
+        break;
+    //Ack from diagnosis software (type 38)
+    case(0xb8):
+        DPRINTLN("Diagnosis SW ack?"); 
+        break;
+    //Voltage diagnosis thresholds  (type 53)
+    case(0xd3):
+        DPRINTLN("Voltage diagnosis thresholds (not implemented in code)"); 
+        break;
+    //CO2 calibration (typ 57)
+    case(0xd7):
+        DPRINTLN("CO2 calibration (not implemented in code)"); 
+        break;
+    //Error codes(typ 56) 
+    case(0xd6):
+        DPRINTLN("Error codes status (not implemented in code)"); 
+        break;
+    default:
+        printMsgDebug();
     }
-
 }
 
 
@@ -117,15 +146,15 @@ void w_bus::initSequence(void)
         sendTXmessage(TX_MESSAGE_INIT_6);
     }
     if (counter == 7){
-        sendTXmessage(TX_MESSAGE_INIT_7);
+        sendTXmessage(TX_STATUS_1);
     }
-    //If we reach below this we have finished init
     if (counter == 8){
         counter = 0;
         wbus_ok = true;
-        sendTXmessage(TX_STATUS_1);
+        sendTXmessage(TX_STATUS_2);
         return;
     }
+    
    counter++; 
 }
 
