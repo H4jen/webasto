@@ -85,6 +85,7 @@ while(1) {
         break;
      case WBUS_OK:
         //DPRINTLN("We have reached the WBUS_OK state");
+        wbus.statusSequence();
         if (!wbus.wbus_ok) {
             DPRINTLN("Trying to reset the Wbus");
             MAIN_STATE = START;

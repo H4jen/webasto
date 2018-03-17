@@ -18,14 +18,21 @@ const int TX_MESSAGE_INIT_6[]={6,0xF4,0x03,0x57,0x01,0xA1};
 
 //Status message sent in loop.
 const int TX_STATUS_1[]={6,0xF4,0x03,0x56,0x01,0xA0};
-const int TX_STATUS_2[]={34,0xF4,0x1F,0x50,0x30,0x01, 
-                           0x03,0x05,0x06,0x07,0x08,
-                           0x0A,0x0C,0x0E,0x0F,0x10,
-                           0x11,0x13,0x1E,0x1F,0x24, 
-                           0x27,0x29,0x2A,0x2C,0x2D,
-                           0x32,0x34,0x3D,0x52,0x57,
-                           0x5F,0x78,0x89};
+const int TX_STATUS_2[]={6,0xF4,0x03,0x50,0x03,0xA4};
+const int TX_STATUS_3[]={6,0xF4,0x03,0x50,0x05,0xA2};
 
+//const int TX_STATUS_2[]={34,0xF4,0x1F,0x50,0x30,0x01, 
+//                           0x03,0x05,0x06,0x07,0x08,
+  //                         0x0A,0x0C,0x0E,0x0F,0x10,
+    //                       0x11,0x13,0x1E,0x1F,0x24, 
+      //                     0x27,0x29,0x2A,0x2C,0x2D,
+        //                   0x32,0x34,0x3D,0x52,0x57,
+          //                 0x5F,0x78,0x89};
+
+bool isBitSet(uint8_t num, int bit)
+{
+    return 1 == ( (num >> bit) & 1);
+}
 
 String w_bus::subStringDataMsg(int index)
 {
@@ -83,11 +90,102 @@ void w_bus::parseMessage() {
     case(0xd6):
         DPRINTLN("Error codes status (not implemented in code)"); 
         break;
+    case(0xd0):
+        switch(rx_msg.data[1]) {
+            //Multi read
+            case (0x30):
+                parseStatusData(2);
+                break;
+            //Only one sensor
+            default:
+                parseStatusData(1);    
+        }
+        break;
     default:
         printMsgDebug();
     }
 }
 
+//Run through status data and parse each status output
+// Normal status ouput below
+// 4F 52 D0 30 01 00 03 00 05 00 06 00 07 00 08 00 
+// 0A 00 0C 3C 0E 31 56 0F 00 75 10 00 11 00 00 
+// 13 00 D8 1E 00 00 1F 00 24 00 27 32 29 8F A0 
+// 2A 00 2C 00 2D 00 32 00 34 03 70 3D 00 00 52 00 00 30 00 03 05 00 0D 29 00 02 25 
+// 57 00 19 0B 5F 00 22 78 00 75 17
+// This functions assumes that the data status fields are fixed
+
+void w_bus::parseStatusData(int pos) {
+
+    //Keeps track of next status position
+    int spos = pos;
+    
+    //Run through the message and sort out the different status informations.
+    while(spos <= rx_msg.length-1)
+    {
+      switch(rx_msg.data[spos]) {
+    
+        //Unknown
+        case(0x01):
+            wbus_status.status_01 = rx_msg.data[spos+1];
+            spos = spos+2;
+            break;
+        
+        //On-off flag of different systems (important)
+        //
+        //combustion_fan
+        //bool glow_plug = false;
+        //fuel_pump = false;
+        //circulation_pump = false;
+        //vehicle_fan_relay = false;
+        //noozle_stock_heating = false;
+        //flame_inidicator = false;
+        case(0x03):
+            int on_off_status; 
+            on_off_status=rx_msg.data[spos+1];
+            wbus_status.combustion_fan=isBitSet(on_off_status,0);
+            wbus_status.glow_plug=isBitSet(on_off_status,1);
+            wbus_status.fuel_pump=isBitSet(on_off_status,2);
+            wbus_status.circulation_pump=isBitSet(on_off_status,3);
+            wbus_status.vehicle_fan_relay=isBitSet(on_off_status,4);
+            wbus_status.noozle_stock_heating=isBitSet(on_off_status,5);
+            wbus_status.flame_indicator=isBitSet(on_off_status,6);
+            DPRINT("Combustion fan = "); DPRINT(wbus_status.combustion_fan); DPRINT(' ');
+            DPRINT("Glow plug = "); DPRINT(wbus_status.glow_plug); DPRINT(' ');
+            DPRINT("Fuel pump = "); DPRINT(wbus_status.fuel_pump); DPRINT(' ');
+            DPRINT("Circulation pump = "); DPRINT(wbus_status.circulation_pump); DPRINTLN();
+            DPRINT("Vehicle_fan_relay = "); DPRINT(wbus_status.vehicle_fan_relay); DPRINT(' ');
+            DPRINT("Noozle_stock_heating = "); DPRINT(wbus_status.noozle_stock_heating); DPRINT(' ');
+            DPRINT("Flame indicator = "); DPRINT(wbus_status.flame_indicator); DPRINT(' ');            
+            spos = spos+2;
+            break;
+        
+        //Operational measurements
+        // 4F 0B D0 05 3C 31 38 00 00 00 00 00 A4
+        case(0x05):
+            wbus_status.temp = rx_msg.data[spos+1]-50;
+            //Big endian
+            wbus_status.milliVolt = 256*rx_msg.data[spos+2]+rx_msg.data[spos+3];
+            wbus_status.flameDet = isBitSet(rx_msg.data[spos+4],0);
+            //Big endian
+            wbus_status.heatPower = 256*rx_msg.data[spos+5]+rx_msg.data[spos+6];
+            wbus_status.flameRes = 256*rx_msg.data[spos+7]+rx_msg.data[spos+8];
+
+            DPRINT("temp = "); DPRINT(wbus_status.temp); DPRINTLN();
+            DPRINT("Voltage (mV) = "); DPRINT(wbus_status.milliVolt); DPRINTLN();
+            DPRINT("Flame detected ? = "); DPRINT(wbus_status.flameDet); DPRINTLN();
+            DPRINT("Heater Power = "); DPRINT(wbus_status.heatPower); DPRINTLN();
+            DPRINT("Flame detector resistanse (mOhm) = "); DPRINT(wbus_status.flameRes); DPRINTLN();
+            spos = spos+9;
+            break;
+        
+        default:
+            //Jump out if unknown status command found
+            DPRINTLN("Unknown status response!!");
+            spos = 999;
+     }
+    }
+} 
 
 //struct rx_message rx_msg;
 
@@ -123,6 +221,28 @@ void w_bus::sendSerialBreak(void)
     Serial1.begin(BAUDRATE,PARITY);
 }
 
+void w_bus::statusSequence(void) {
+    static int counter = 0;
+    if(waiting_for_rx_response == true) return;
+    if(counter == 0) {
+          sendTXmessage(TX_STATUS_1);
+    }
+    if(counter == 2){
+          sendTXmessage(TX_STATUS_2);
+    }
+    if (counter == 3){
+          sendTXmessage(TX_STATUS_3);
+    }      
+    if (counter == 9){
+          counter = 0;
+          return;
+    }
+                          
+    counter++;
+}  
+                                                    
+
+
 void w_bus::initSequence(void) 
 {
     static int counter = 0;
@@ -146,27 +266,25 @@ void w_bus::initSequence(void)
         sendTXmessage(TX_MESSAGE_INIT_6);
     }
     if (counter == 7){
-        sendTXmessage(TX_STATUS_1);
-    }
-    if (counter == 8){
         counter = 0;
         wbus_ok = true;
-        sendTXmessage(TX_STATUS_2);
         return;
     }
     
    counter++; 
 }
 
+
+
 void w_bus::printMsgDebug(void)
 {
     DPRINTHEX(rx_msg.header);
-    DPRINT(' ');
+    //DPRINT(' ');
     DPRINTHEX(rx_msg.length);
-    DPRINT(' ');
+    //DPRINT(' ');
     for(int i=0;i<(rx_msg.length-1);i++) {
         DPRINTHEX(rx_msg.data[i]);
-        DPRINT(' ');
+        //DPRINT(' ');
     }
     DPRINTHEX(rx_msg.checksum);
     DPRINTLN(); 
