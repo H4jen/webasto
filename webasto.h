@@ -18,7 +18,7 @@
 #define DPRINTLNHEX(...)
 #endif
 
-#define MESSAGE_BUFFER_SIZE 128
+#define MESSAGE_BUFFER_SIZE 256
 
 
 #include <Arduino.h>

@@ -86,7 +86,7 @@ public:
     w_bus();
     void printMsgDebug(void);
     void sendSerialBreak(void);
-    void sendTXmessage(const int msg[]);
+    void sendTXmessage(const int msg[],bool need_ack);
     void readSerialData(void);
     void initSequence(void);
     void statusSequence(void);

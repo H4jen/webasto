@@ -7,27 +7,27 @@
 #define SEND_TX_DELAY 300
 // Get Wbus version
 const int TX_MESSAGE_INIT_1[]={6,0xF4,0x03,0x51,0x0A,0xAC};
-//const int TX_MESSAGE_INIT_2[]={6,0xF4,0x03,0x45,0x31,0x83};
+const int TX_MESSAGE_INIT_2[]={6,0xF4,0x03,0x45,0x31,0x83};
 //Get units device name
-const int TX_MESSAGE_INIT_2[]={6,0xF4,0x03,0x51,0x0b,0xAD};
-//const int TX_MESSAGE_INIT_3[]={6,0xF4,0x03,0x51,0x31,0x97};
-const int TX_MESSAGE_INIT_3[]={6,0xF4,0x03,0x51,0x0c,0xAA};
-const int TX_MESSAGE_INIT_4[]={5,0xF4,0x02,0x38,0xCE};
-const int TX_MESSAGE_INIT_5[]={6,0xF4,0x03,0x53,0x02,0xA6};
-const int TX_MESSAGE_INIT_6[]={6,0xF4,0x03,0x57,0x01,0xA1};
+const int TX_MESSAGE_INIT_3[]={6,0xF4,0x03,0x51,0x31,0x97};
+const int TX_MESSAGE_INIT_4[]={25,0xF4,0x16,0x51,0x30,0x01,0x02,0x03,0x04,0x06,0x07,0x08,0x09,0x0B,0x0C,0x0D,0x0E,0x0F,0x10,0x12,0x15,0x18,0x19,0x1A,0x80}; 
+//                                            51   30   01   02   03   04   06   07   08 09 0B       0C 0D 0E       0F 10 12 15 18 19 1A
+                             //1  2    3    4    5    6    7     8   9    10    11   2    3    4    5    6    7    8    9   20   1    2    3    4    5    6    7    8     9   30   1     2  3    4
+const int TX_MESSAGE_INIT_5[]={6,0xF4,0x03,0x50,0x31,0x96};
+const int TX_MESSAGE_INIT_6[]={6,0xF4,0x03,0x51,0x0c,0xaa};
+const int TX_MESSAGE_INIT_7[]={5,0xF4,0x02,0x38,0xCE};
+const int TX_MESSAGE_INIT_8[]={6,0xF4,0x03,0x53,0x02,0xA6};
+const int TX_MESSAGE_INIT_9[]={6,0xF4,0x03,0x57,0x01,0xA1};
 
 //Status message sent in loop.
 const int TX_STATUS_1[]={6,0xF4,0x03,0x56,0x01,0xA0};
 const int TX_STATUS_2[]={6,0xF4,0x03,0x50,0x03,0xA4};
 const int TX_STATUS_3[]={6,0xF4,0x03,0x50,0x05,0xA2};
+const int TX_STATUS_4[]={34,0xF4,0x1F,0x50,0x30,0x01,0x03,0x05,0x06,0x07,0x08,0x0A,0x0C,0x0E,0x0F,0x10,0x11,0x13,0x1E,0x1F,0x24,0x27,0x29,0x2A,0x2C,0x2D,0x32,0x34,0x3D,0x52,0x57,0x5F,0x78,0x89};
+                       //1    2    3    4    5    6    7     8   9    10    11   2    3    4    5    6    7    8    9   20   1    2    3    4    5    6    7    8     9   30   1     2  3    4
+//Keep alive message.
+const int TX_KEEP_ALIVE[]={7,0xF4,0x04,0x44,0x2A,0x00,0x9E};
 
-//const int TX_STATUS_2[]={34,0xF4,0x1F,0x50,0x30,0x01, 
-//                           0x03,0x05,0x06,0x07,0x08,
-  //                         0x0A,0x0C,0x0E,0x0F,0x10,
-    //                       0x11,0x13,0x1E,0x1F,0x24, 
-      //                     0x27,0x29,0x2A,0x2C,0x2D,
-        //                   0x32,0x34,0x3D,0x52,0x57,
-          //                 0x5F,0x78,0x89};
 
 bool isBitSet(uint8_t num, int bit)
 {
@@ -94,7 +94,8 @@ void w_bus::parseMessage() {
         switch(rx_msg.data[1]) {
             //Multi read
             case (0x30):
-                parseStatusData(2);
+                //parseStatusData(2);
+                printMsgDebug();
                 break;
             //Only one sensor
             default:
@@ -121,7 +122,7 @@ void w_bus::parseStatusData(int pos) {
     int spos = pos;
     
     //Run through the message and sort out the different status informations.
-    while(spos <= rx_msg.length-1)
+    while(spos < rx_msg.length-1)
     {
       switch(rx_msg.data[spos]) {
     
@@ -156,7 +157,7 @@ void w_bus::parseStatusData(int pos) {
             DPRINT("Circulation pump = "); DPRINT(wbus_status.circulation_pump); DPRINTLN();
             DPRINT("Vehicle_fan_relay = "); DPRINT(wbus_status.vehicle_fan_relay); DPRINT(' ');
             DPRINT("Noozle_stock_heating = "); DPRINT(wbus_status.noozle_stock_heating); DPRINT(' ');
-            DPRINT("Flame indicator = "); DPRINT(wbus_status.flame_indicator); DPRINT(' ');            
+            DPRINT("Flame indicator = "); DPRINT(wbus_status.flame_indicator); DPRINTLN(' ');            
             spos = spos+2;
             break;
         
@@ -181,6 +182,7 @@ void w_bus::parseStatusData(int pos) {
         
         default:
             //Jump out if unknown status command found
+            DPRINTLNHEX(rx_msg.data[spos]);
             DPRINTLN("Unknown status response!!");
             spos = 999;
      }
@@ -189,14 +191,20 @@ void w_bus::parseStatusData(int pos) {
 
 //struct rx_message rx_msg;
 
-void w_bus::sendTXmessage(const int msg[])
+void w_bus::sendTXmessage(const int msg[],bool need_ack)
 {
+    //DPRINTLN("Sending MTFO");
     //reset response counter
     number_of_rx_loops = 0;
     //TX sent flag
-    waiting_for_rx_response = true;
-    for(int i=1;i<msg[0];i++) Serial1.write(msg[i]);
-    delay(SEND_TX_DELAY);
+    if(need_ack) waiting_for_rx_response = true;
+    //DPRINT("Sending: ");
+    for(int i=1;i<msg[0];i++) {
+        Serial1.write(msg[i]);
+    //    DPRINTHEX(msg[i]);
+    }
+    //DPRINTLN();
+    //delay(SEND_TX_DELAY);
     
 }
 
@@ -223,21 +231,26 @@ void w_bus::sendSerialBreak(void)
 
 void w_bus::statusSequence(void) {
     static int counter = 0;
-    if(waiting_for_rx_response == true) return;
+    //if(waiting_for_rx_response == true) {DPRINTLN("waintn for RX!");return;}
     if(counter == 0) {
-          sendTXmessage(TX_STATUS_1);
+          sendTXmessage(TX_STATUS_1,true);
     }
-    if(counter == 2){
-          sendTXmessage(TX_STATUS_2);
+    if(counter == 1){
+          sendTXmessage(TX_STATUS_2,true);
     }
+    if (counter == 2){
+          sendTXmessage(TX_STATUS_3,true);
+    } 
     if (counter == 3){
-          sendTXmessage(TX_STATUS_3);
-    }      
-    if (counter == 9){
+          sendTXmessage(TX_STATUS_4,true);
+    }
+    if (counter == 4){
+          sendTXmessage(TX_KEEP_ALIVE,true);
+    }
+    if (counter >= 4){
           counter = 0;
           return;
-    }
-                          
+    }                      
     counter++;
 }  
                                                     
@@ -246,26 +259,35 @@ void w_bus::statusSequence(void) {
 void w_bus::initSequence(void) 
 {
     static int counter = 0;
-    if(waiting_for_rx_response == true) return;
+    //if(waiting_for_rx_response == true) {DPRINTLN("waintn for RX!");return;}
     if(counter == 0) {
-        sendTXmessage(TX_MESSAGE_INIT_1);
+        sendTXmessage(TX_MESSAGE_INIT_1,true);
+    }
+    if (counter == 1){
+        sendTXmessage(TX_MESSAGE_INIT_2,true);
     }
     if (counter == 2){
-        sendTXmessage(TX_MESSAGE_INIT_2);
-    }
-    if (counter == 3){
-        sendTXmessage(TX_MESSAGE_INIT_3);
+        sendTXmessage(TX_MESSAGE_INIT_3,true);
     } 
+    if (counter == 3){
+        sendTXmessage(TX_MESSAGE_INIT_4,false);
+    }
     if (counter == 4){
-        sendTXmessage(TX_MESSAGE_INIT_4);
+        sendTXmessage(TX_MESSAGE_INIT_5,true);
     }
     if (counter == 5){
-        sendTXmessage(TX_MESSAGE_INIT_5);
+        sendTXmessage(TX_MESSAGE_INIT_6,true);
     }
     if (counter == 6){
-        sendTXmessage(TX_MESSAGE_INIT_6);
+        sendTXmessage(TX_MESSAGE_INIT_7,true);
     }
     if (counter == 7){
+        sendTXmessage(TX_MESSAGE_INIT_8,true);
+    }
+    if (counter == 8){
+        sendTXmessage(TX_MESSAGE_INIT_9,true);
+    }                      
+    if (counter == 9) {
         counter = 0;
         wbus_ok = true;
         return;
@@ -293,6 +315,7 @@ void w_bus::printMsgDebug(void)
 
 void w_bus::readSerialData(void)
 {
+
  //The reception of a message is implemented as a state machine 
  //Read is blocking. Wait until a message is read before doing anything else...
  //Need timeout? 
@@ -300,7 +323,9 @@ void w_bus::readSerialData(void)
  //Do some checking if we are waiting for response and if we have had som timeouts
  //
  
+/* 
  if(waiting_for_rx_response) {
+   //delay(100);
    number_of_rx_loops++;
    if (number_of_rx_loops > 30){ 
        waiting_for_rx_response = false;
@@ -313,15 +338,14 @@ void w_bus::readSerialData(void)
        wbus_ok = false;
    }
  }
-  
-  while (Serial1.available()>0){
-    int rxByte = 0;
-    switch(rx_state) {
+*/
+  int rxByte = Serial1.read();
+  switch(rx_state) {
     case START:
         rx_state = FINDHEADER;
         break;  
     case FINDHEADER:
-        rxByte = Serial1.read();
+        //DPRINTLNHEX(rxByte);
         //Below if statement could be flawed!!
         if((rxByte == TXHEADER) || (rxByte == RXHEADER)) {
                 rx_state = READLENGTH;
@@ -330,8 +354,8 @@ void w_bus::readSerialData(void)
         break;
     //Header received
     case READLENGTH:
-        rxByte = Serial1.read();
-        if((rxByte < 128) && (rxByte > 1)) {
+        //DPRINTLNHEX(rxByte);
+        if((rxByte < 256) && (rxByte > 1)) {
             rx_state =READDATA;
             rx_msg.length=rxByte;
         }
@@ -340,7 +364,6 @@ void w_bus::readSerialData(void)
         }
         break;
     case READDATA:
-        rxByte = Serial1.read();
         rx_msg.data[rx_msg.nr_data_read] = rxByte;
         rx_msg.data_string[rx_msg.nr_data_read] = (char)rxByte;
         rx_msg.nr_data_read++;
@@ -365,6 +388,7 @@ void w_bus::readSerialData(void)
                     //calls message parser with global struct
                     parseMessage();
                     //Clear TX response flag
+                    //DPRINTLN("GOOD msg!!");
                     waiting_for_rx_response = false;
                     //Clear timeout loops
                     time_out_loops=0;
@@ -375,7 +399,7 @@ void w_bus::readSerialData(void)
                 DPRINTLN("Checksum check FAILED!!");
              }
         }
-                break;
+        break;
     case RESET_STATE:
         rx_msg.header=0;
         rx_msg.length=0;
@@ -386,7 +410,8 @@ void w_bus::readSerialData(void)
         break;
     default:
         break;
-    }
+    
  }
+
 }
 

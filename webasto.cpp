@@ -1,10 +1,12 @@
 #include <Arduino.h>
-//#include <CustomSoftwareSerial.h>
 #include <Wire.h>
 #include <LCD.h>
 #include <LiquidCrystal_I2C.h>
 #include "wbus.h"
 #include "webasto.h"
+
+//The number of ms to wait until running status loop again
+#define WEBASTO_LOOP_TIME 1000 
 
 #define I2C_ADDR    0x27  // Define I2C Address where the PCF8574A is
 #define BACKLIGHT_PIN     3
@@ -15,7 +17,6 @@
 #define D5_pin  5
 #define D6_pin  6
 #define D7_pin  7
-
 
 #define INVERT_SIGNAL false
 #define BLINK_DELAY_MS 2400
@@ -56,6 +57,9 @@ void init_board() {
 
 int main (void)
 {
+unsigned long current_tick=0;
+unsigned long loop_tick=0;
+
 //Init arduino. do this before anything else happens...
 init_board();
 
@@ -69,10 +73,9 @@ enum MAIN_STATES MAIN_STATE = START;
 // main loop
 while(1) {
 
-  //Detect if webasto communication is up and running. If not try to start (inf?)
-  //Display status in LCD display.
-
-
+    //Get time from start
+    current_tick = millis();
+        
     switch(MAIN_STATE) {
 
      case START:
@@ -80,12 +83,19 @@ while(1) {
         wbus.sendSerialBreak();
         break; 
      case INIT_WBUS:
-        wbus.initSequence();
+        if(current_tick > (loop_tick + WEBASTO_LOOP_TIME)){
+            wbus.initSequence();
+            loop_tick=current_tick;
+        }
         if(wbus.wbus_ok) MAIN_STATE = WBUS_OK;
         break;
      case WBUS_OK:
-        //DPRINTLN("We have reached the WBUS_OK state");
-        wbus.statusSequence();
+        //Run this loop every WEBASTO_LOOP_TIME
+        if(current_tick > (loop_tick + WEBASTO_LOOP_TIME)){
+            //DPRINTLN(current_tick);
+            wbus.statusSequence();
+            loop_tick=current_tick;
+        }
         if (!wbus.wbus_ok) {
             DPRINTLN("Trying to reset the Wbus");
             MAIN_STATE = START;
@@ -93,12 +103,8 @@ while(1) {
         break;
     }
    
-    //delay(1000);
-    //wbus.sendSerialBreak();
-    //wbus.sendTXmessage(TX_MESSAGE_INIT_1);
-
-    //Blocks until all serial data is read!
-    while (Serial1.available()) {
+    while (Serial1.available()>0) {
+        //DPRINTLN("serialdataavail");
         wbus.readSerialData();
     } 
  }
