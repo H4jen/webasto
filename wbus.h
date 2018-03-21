@@ -57,6 +57,14 @@ class w_bus {
     //Holds communication object
     //CustomSoftwareSerial* mySerial;
     //can only be pins 8-13 because prtmapping is hardcoded to PORTB 
+    
+    //Wraparound message buffer;
+    int message_buffer[MESSAGE_BUFFER_SIZE];
+    //Tracks were read and write in buffer is. Strategy is to always write to buffer when data availible. Read of buffer is only done when data is avalible.
+    int *read_ptr,*write_ptr;
+    int write_array_counter = 0;
+    int read_array_counter = 0;
+
     struct rx_message rx_msg;
     uint8_t rxPin=19;
     uint8_t txPin=18;
@@ -87,7 +95,9 @@ public:
     void printMsgDebug(void);
     void sendSerialBreak(void);
     void sendTXmessage(const int msg[],bool need_ack);
+    
     void readSerialData(void);
+    void getSerialMessage(void);
     void initSequence(void);
     void statusSequence(void);
     

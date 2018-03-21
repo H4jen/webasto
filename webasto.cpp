@@ -75,9 +75,9 @@ while(1) {
 
     //Get time from start
     current_tick = millis();
-        
+    
+    //TX part of code.
     switch(MAIN_STATE) {
-
      case START:
         MAIN_STATE = INIT_WBUS;
         wbus.sendSerialBreak();
@@ -102,9 +102,13 @@ while(1) {
         }
         break;
     }
+    
+    // RX part of code.    
+    //This is calles each loop, but only one byte is parsed each round
+    wbus.getSerialMessage();
    
+    //Read data if availible and push to wraparound buffer.
     while (Serial1.available()>0) {
-        //DPRINTLN("serialdataavail");
         wbus.readSerialData();
     } 
  }

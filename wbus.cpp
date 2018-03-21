@@ -47,6 +47,7 @@ return str;
 // Uses the global message captured.
 // To reach this point the message needs to be RX and valid
 // This is implicitly assumed.
+
 void w_bus::parseMessage() {
 
     //Main parser function
@@ -95,7 +96,7 @@ void w_bus::parseMessage() {
             //Multi read
             case (0x30):
                 //parseStatusData(2);
-                printMsgDebug();
+                //printMsgDebug();
                 break;
             //Only one sensor
             default:
@@ -213,6 +214,10 @@ w_bus::w_bus () {
     //Open com with serial port to webasto heater.
     Serial1.begin(BAUDRATE,PARITY);
     wbus_ok = false;
+    
+    //Let message_buffer pointer point to first index of buffer.
+    write_ptr = &message_buffer[0];
+    read_ptr = &message_buffer[0];
 }
 
 
@@ -316,6 +321,71 @@ void w_bus::printMsgDebug(void)
 void w_bus::readSerialData(void)
 {
 
+    int rxByte = Serial1.read();
+    
+    //write read value to current index
+    *write_ptr = rxByte;
+    write_array_counter++;
+    write_ptr++;
+    // Reached end of buffer, wrap around.
+    if(write_array_counter >= MESSAGE_BUFFER_SIZE) {
+        write_array_counter = 0;
+        write_ptr = &message_buffer[0];
+    }
+        
+}
+
+void w_bus::getSerialMessage(void) {
+
+//Check that there are new bytes to read. If write_ptr != read_ptr data is ready to read.
+
+if(write_ptr == read_ptr) return;
+
+    DPRINTLNHEX(*read_ptr);
+    read_array_counter++;
+    read_ptr++;
+
+    // Reached end of buffer, wrap around.
+    if(read_array_counter >= MESSAGE_BUFFER_SIZE) {
+        read_array_counter = 0;
+        read_ptr = &message_buffer[0];
+    }
+
+}
+/*
+switch(rx_state) {
+    case START:
+        rx_state = FINDHEADER;
+        break;  
+    case FINDHEADER:
+        //DPRINTLNHEX(rxByte);
+        //Below if statement could be flawed!!
+        if((rxByte == TXHEADER) || (rxByte == RXHEADER)) {
+                rx_state = READLENGTH;
+                rx_msg.header = rxByte;
+        }
+        break;
+    //Header received
+    case READLENGTH:
+        //DPRINTLNHEX(rxByte);
+        if((rxByte < 256) && (rxByte > 1)) {
+            rx_state =READDATA;
+            rx_msg.length=rxByte;
+        }
+        else {
+            rx_state = RESET_STATE;
+        }
+        break;
+
+
+}
+*/
+
+
+/*
+void w_bus::readSerialData(void)
+{
+
  //The reception of a message is implemented as a state machine 
  //Read is blocking. Wait until a message is read before doing anything else...
  //Need timeout? 
@@ -323,12 +393,13 @@ void w_bus::readSerialData(void)
  //Do some checking if we are waiting for response and if we have had som timeouts
  //
  
-/* 
+ 
  if(waiting_for_rx_response) {
    //delay(100);
    number_of_rx_loops++;
    if (number_of_rx_loops > 30){ 
        waiting_for_rx_response = false;
+
        DPRINTLN("Waiting for RX response timed!"); 
        time_out_loops++;
    }
@@ -339,7 +410,10 @@ void w_bus::readSerialData(void)
    }
  }
 */
+//
+/*
   int rxByte = Serial1.read();
+  //DPRINTLN(rxByte);
   switch(rx_state) {
     case START:
         rx_state = FINDHEADER;
@@ -386,7 +460,7 @@ void w_bus::readSerialData(void)
                 //Do parsing and shit if we received an RX message
                 if(rx_msg.header == RXHEADER) {
                     //calls message parser with global struct
-                    parseMessage();
+                    //parseMessage();
                     //Clear TX response flag
                     //DPRINTLN("GOOD msg!!");
                     waiting_for_rx_response = false;
@@ -413,5 +487,5 @@ void w_bus::readSerialData(void)
     
  }
 
-}
+}*/ 
 
