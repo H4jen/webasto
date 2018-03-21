@@ -198,7 +198,7 @@ void w_bus::sendTXmessage(const int msg[],bool need_ack)
     //reset response counter
     number_of_rx_loops = 0;
     //TX sent flag
-    if(need_ack) waiting_for_rx_response = true;
+    //if(need_ack) waiting_for_rx_response = true;
     //DPRINT("Sending: ");
     for(int i=1;i<msg[0];i++) {
         Serial1.write(msg[i]);
@@ -296,8 +296,7 @@ void w_bus::initSequence(void)
         counter = 0;
         wbus_ok = true;
         return;
-    }
-    
+    }    
    counter++; 
 }
 
@@ -338,10 +337,16 @@ void w_bus::readSerialData(void)
 void w_bus::getSerialMessage(void) {
 
 //Check that there are new bytes to read. If write_ptr != read_ptr data is ready to read.
-
 if(write_ptr == read_ptr) return;
 
-    DPRINTLNHEX(*read_ptr);
+
+int rxByte = 0;
+
+    
+//Read data ONLY if we are in correct state...
+if(!((rx_state == START) || (rx_state == RESET_STATE))) {
+    rxByte = *read_ptr;
+    //DPRINTLNHEX(rxByte);
     read_array_counter++;
     read_ptr++;
 
@@ -350,19 +355,19 @@ if(write_ptr == read_ptr) return;
         read_array_counter = 0;
         read_ptr = &message_buffer[0];
     }
-
 }
-/*
-switch(rx_state) {
+
+//Find message in data
+  switch(rx_state) {
     case START:
         rx_state = FINDHEADER;
         break;  
     case FINDHEADER:
-        //DPRINTLNHEX(rxByte);
         //Below if statement could be flawed!!
         if((rxByte == TXHEADER) || (rxByte == RXHEADER)) {
                 rx_state = READLENGTH;
                 rx_msg.header = rxByte;
+                //DPRINTLNHEX(rxByte);
         }
         break;
     //Header received
@@ -376,10 +381,59 @@ switch(rx_state) {
             rx_state = RESET_STATE;
         }
         break;
+    case READDATA:
+        rx_msg.data[rx_msg.nr_data_read] = rxByte;
+        rx_msg.data_string[rx_msg.nr_data_read] = (char)rxByte;
+        rx_msg.nr_data_read++;
+        if(rx_msg.nr_data_read >= rx_msg.length){
+             int XOR = 0;
+             XOR = XOR^rx_msg.header^rx_msg.length;
+             //terminate data_string read
+             rx_msg.data_string[rx_msg.nr_data_read]='\0';
+             for(int i=0;i<(rx_msg.length-1);i++) {
+                XOR = XOR ^ rx_msg.data[i];
+             }
+             rx_msg.checksum = rxByte;
+             if(XOR == rx_msg.checksum) {
+                rx_state = RESET_STATE;
+                rx_msg.valid_message = true;
+                //Print debug message
+                #ifdef RAWDEBUGOUTPUT
+                    printMsgDebug();
+                #endif
+                //Do parsing and shit if we received an RX message
+                //if(rx_msg.header == RXHEADER) {
+                    //calls message parser with global struct
+                    //parseMessage();
+                    //Clear TX response flag
+                    //DPRINTLN("GOOD msg!!");
+                    //waiting_for_rx_response = false;
+                    //Clear timeout loops
+                //}
+             }
+             else {
+                rx_state = RESET_STATE;
+                DPRINTLN("Checksum check FAILED!!");
+             }
+        }
+        break;
+    case RESET_STATE:
+        rx_msg.header=0;
+        rx_msg.length=0;
+        rx_msg.nr_data_read=0;
+        rx_msg.checksum=0;
+        rx_msg.valid_message=false;
+        rx_state=START;
+        break;
+    default:
+        break;
+  }
+
+
 
 
 }
-*/
+//*/
 
 
 /*
