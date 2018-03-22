@@ -4,6 +4,7 @@
 #include <LiquidCrystal_I2C.h>
 #include "wbus.h"
 #include "webasto.h"
+#include "command.h"
 
 //The number of ms to wait until running status loop again
 #define WEBASTO_LOOP_TIME 1000 
@@ -63,8 +64,9 @@ unsigned long loop_tick=0;
 //Init arduino. do this before anything else happens...
 init_board();
 
-//Initialize the main wbus com object.
+//Initialize the main wbus com object, and serial command interface
 class w_bus wbus;
+class Command cmd;
 
 
 enum MAIN_STATES {START, INIT_WBUS, WBUS_OK};
@@ -110,6 +112,11 @@ while(1) {
     //Read data if availible and push to wraparound buffer.
     while (Serial1.available()>0) {
         wbus.readSerialData();
-    } 
+    }
+
+    while (Serial.available()>0) {
+        cmd.readSerialData();
+    }
+ 
  }
 }
