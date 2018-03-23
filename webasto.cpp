@@ -109,12 +109,18 @@ while(1) {
     //This is calles each loop, but only one byte is parsed each round
     wbus.getSerialMessage();
    
-    //Read data if availible and push to wraparound buffer.
-    while (Serial1.available()>0) {
+    //Always data all availible data from webasto if availible and push to wraparound buffer.
+    while(Serial1.available()>0) {
         wbus.readSerialData();
     }
 
-    while (Serial.available()>0) {
+    
+    //Get command set
+    cmd.getSerialMessage();
+
+
+    //Read one char from command interface if availible
+    if (Serial.available()>0) {
         cmd.readSerialData();
     }
  

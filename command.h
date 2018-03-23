@@ -6,13 +6,7 @@
 
 struct command_message
 {
-  int rawMessage=0;
-  int header=0;
-  int length=0;
-  int data[MESSAGE_BUFFER_SIZE];
   char data_string[MESSAGE_BUFFER_SIZE];
-  int nr_data_read=0;
-  bool valid_message = false;
 };
 
 //Define the wbus class
@@ -53,12 +47,13 @@ class Command {
    
 public:
     //bool wbus_ok=false;
-    //void parseMessage(void);
+    void parseCommand(int string_size);
     Command();
     void printMsgDebug(void);
     //void sendSerialBreak(void);
     //void sendTXmessage(const int msg[],bool need_ack);
     
+    //void getCommand()
     void readSerialData(void);
     void getSerialMessage(void);
     //void initSequence(void);
