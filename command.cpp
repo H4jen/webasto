@@ -97,7 +97,7 @@ void Command::parseCommand(int string_size) {
     if(string_size < 1) return;
     
     //Parse data if not empty.
-    if(strncmp(cmd_msg.data_string,"Heater ON",string_size) == 0) {
+    if(strncmp(cmd_msg.data_string,"on",string_size) == 0) {
         DPRINTLN("WOW we are turning heater on");
     }
 }

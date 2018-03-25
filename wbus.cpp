@@ -94,14 +94,16 @@ void w_bus::parseMessage() {
         break;
     case(0xd0):
         switch(rx_msg.data[1]) {
-            //Multi read
+            //Multi read. This is used to display all data from heater
             case (0x30):
-                //parseStatusData(2);
+                parseStatusData();
                 //printMsgDebug();
                 break;
             //Only one sensor
             default:
-                parseStatusData(1);    
+                int i=0;
+                i++;
+                //parseStatusData(1);    
         }
         break;
     default:
@@ -111,29 +113,139 @@ void w_bus::parseMessage() {
 
 //Run through status data and parse each status output
 // Normal status ouput below
-// 4F 52 D0 30 01 00 03 00 05 00 06 00 07 00 08 00 
+
+// 4F 52 D0 30 01 03 03 00 05 00 06 00 07 00 08 00 0A 07 0C 40 0E 39 08 0F 03 8B 10 01 11 05 DC 13 03 65 1E 08 98 1F 20 24 4C 27 4D 29 6F B0 2A 00 2C 00 2D 00 32 00 34 03 66 3D 01 0E 52 00 00 36 00 2
+
 // 0A 00 0C 3C 0E 31 56 0F 00 75 10 00 11 00 00 
 // 13 00 D8 1E 00 00 1F 00 24 00 27 32 29 8F A0 
 // 2A 00 2C 00 2D 00 32 00 34 03 70 3D 00 00 52 00 00 30 00 03 05 00 0D 29 00 02 25 
 // 57 00 19 0B 5F 00 22 78 00 75 17
 // This functions assumes that the data status fields are fixed
 
-void w_bus::parseStatusData(int pos) {
+void w_bus::parseStatusData() {
 
     //Keeps track of next status position
-    int spos = pos;
+    int pos=2;
     
     //Run through the message and sort out the different status informations.
-    while(spos < rx_msg.length-1)
+    while(pos < rx_msg.length-1)
     {
-      switch(rx_msg.data[spos]) {
+      switch(rx_msg.data[pos]) {
     
         //Unknown
         case(0x01):
-            wbus_status.status_01 = rx_msg.data[spos+1];
-            spos = spos+2;
+            wbus_status.status_01 = rx_msg.data[pos+1];
+            DPRINT("status_01: "); DPRINTLN(wbus_status.status_01);
+            pos = pos+2;
             break;
+        case(0x03):
+            wbus_status.status_03 = rx_msg.data[pos+1];
+            pos = pos+2;
+            break;
+        case(0x05):
+            wbus_status.status_05 = rx_msg.data[pos+1];
+            pos = pos+2;
+            break;
+        case(0x06):
+            wbus_status.status_06 = rx_msg.data[pos+1];
+            pos = pos+2;
+            break;
+        case(0x07):
+            wbus_status.status_07 = rx_msg.data[pos+1];
+            pos = pos+2;
+            break;
+        case(0x08):
+            wbus_status.status_08 = rx_msg.data[pos+1];
+            pos = pos+2;
+            break;
+        case(0x0A):
+            wbus_status.status_0A = rx_msg.data[pos+1];
+            DPRINT("status_0A: "); DPRINTLN(wbus_status.status_0A);
+            pos = pos+2;
+            break;
+        case(0x0C):
+            wbus_status.temp = rx_msg.data[pos+1] - 50;
+            DPRINT("Temperature: "); DPRINTLN(wbus_status.temp);
+            pos = pos+2;
+            break;
+        //Voltage reading
+        case(0x0E):
+            wbus_status.voltage_mV = ((rx_msg.data[pos+1] << 8) | rx_msg.data[pos+2]);
+            DPRINT("Voltage in mV: "); DPRINTLN(wbus_status.voltage_mV);
+            pos = pos+3;
+            break;
+        case(0x0F):
+            wbus_status.status_0F = ((rx_msg.data[pos+1] << 8) | rx_msg.data[pos+2]);
+            DPRINT("status_0F: ");DPRINTLN(wbus_status.status_0F);
+            pos = pos+3;
+            break;
+        case(0x10):
+            wbus_status.status_10 = rx_msg.data[pos+1];
+            DPRINT("status_10: "); DPRINTLN(wbus_status.status_10);
+            pos = pos+2;
+            break;
+        case(0x11):
+            wbus_status.power = ((rx_msg.data[pos+1] << 8) | rx_msg.data[pos+2]);
+            DPRINT("Heater power: "); DPRINTLN(wbus_status.power);
+            pos = pos+3;
+            break;
+        case(0x13):
+            wbus_status.resistance = ((rx_msg.data[pos+1] << 8) | rx_msg.data[pos+2]);
+            DPRINT("Glow plug resistance (mOhms): "); DPRINTLN(wbus_status.resistance);
+            pos = pos+3;
+            break;
+        case(0x1E):
+            wbus_status.comb_fan = ((rx_msg.data[pos+1] << 8) | rx_msg.data[pos+2]);
+            DPRINT("Combustion fan: "); DPRINTLN(wbus_status.comb_fan);
+            pos = pos+3;
+            break;
+        case(0x1F):
+            wbus_status.status_1F = rx_msg.data[pos+1];
+            DPRINT("status_1F: "); DPRINTLN(wbus_status.status_1F);
+            pos = pos+2;
+            break;
+        case(0x24):
+            wbus_status.status_24 = rx_msg.data[pos+1];
+            DPRINT("status_24: "); DPRINTLN(wbus_status.status_24);
+            pos = pos+2;
+            break;
+        case(0x27):
+            wbus_status.status_27  = rx_msg.data[pos+1];
+            DPRINT("status_27: "); DPRINTLN(wbus_status.status_27);
+            pos = pos+2;
+            break;
+        case(0x29):
+            wbus_status.status_29 = ((rx_msg.data[pos+1] << 8) | rx_msg.data[pos+2]);
+            DPRINT("status_29: "); DPRINTLN(wbus_status.status_29);
+            pos = pos+3;
+            break;
+        case(0x2A):
+            wbus_status.status_29 = rx_msg.data[pos+1];
+            pos = pos+2;
+            break;
+        case(0x2C):
+            wbus_status.status_29 = rx_msg.data[pos+1];
+            pos = pos+2;
+            break;
+        case(0x2D):
+            wbus_status.status_29 = rx_msg.data[pos+1];
+            pos = pos+2;
+            break;
+        case(0x32):
+            wbus_status.status_29 = rx_msg.data[pos+1];
+            pos = pos+2;
+            break;
+        case(0x34):
+            wbus_status.status_34 = ((rx_msg.data[pos+1] << 8) | rx_msg.data[pos+2]);
+            DPRINT("status_34: "); DPRINTLN(wbus_status.status_34);
+            pos = pos+3;
+            break;
+
+
+
+
         
+
         //On-off flag of different systems (important)
         //
         //combustion_fan
@@ -143,6 +255,7 @@ void w_bus::parseStatusData(int pos) {
         //vehicle_fan_relay = false;
         //noozle_stock_heating = false;
         //flame_inidicator = false;
+        /*
         case(0x03):
             int on_off_status; 
             on_off_status=rx_msg.data[spos+1];
@@ -162,9 +275,10 @@ void w_bus::parseStatusData(int pos) {
             DPRINT("Flame indicator = "); DPRINT(wbus_status.flame_indicator); DPRINTLN(' ');            
             spos = spos+2;
             break;
-        
+        */
         //Operational measurements
         // 4F 0B D0 05 3C 31 38 00 00 00 00 00 A4
+        /*
         case(0x05):
             wbus_status.temp = rx_msg.data[spos+1]-50;
             //Big endian
@@ -181,12 +295,12 @@ void w_bus::parseStatusData(int pos) {
             DPRINT("Flame detector resistanse (mOhm) = "); DPRINT(wbus_status.flameRes); DPRINTLN();
             spos = spos+9;
             break;
-        
+        */
         default:
             //Jump out if unknown status command found
-            DPRINTLNHEX(rx_msg.data[spos]);
+            //DPRINTLNHEX(rx_msg.data[pos]);
             DPRINTLN("Unknown status response!!");
-            spos = 999;
+            pos = 999;
      }
     }
 } 
@@ -340,14 +454,11 @@ void w_bus::getSerialMessage(void) {
 //Check that there are new bytes to read. If write_ptr != read_ptr data is ready to read.
 if(write_ptr == read_ptr) return;
 
-
 int rxByte = 0;
-
     
 //Read data ONLY if we are in correct state...
 if(!((rx_state == START) || (rx_state == RESET_STATE))) {
     rxByte = *read_ptr;
-    //DPRINTLNHEX(rxByte);
     read_array_counter++;
     read_ptr++;
 
@@ -368,7 +479,6 @@ if(!((rx_state == START) || (rx_state == RESET_STATE))) {
         if((rxByte == TXHEADER) || (rxByte == RXHEADER)) {
                 rx_state = READLENGTH;
                 rx_msg.header = rxByte;
-                //DPRINTLNHEX(rxByte);
         }
         break;
     //Header received
@@ -403,14 +513,10 @@ if(!((rx_state == START) || (rx_state == RESET_STATE))) {
                     printMsgDebug();
                 #endif
                 //Do parsing and shit if we received an RX message
-                //if(rx_msg.header == RXHEADER) {
+                if(rx_msg.header == RXHEADER) {
                     //calls message parser with global struct
-                    //parseMessage();
-                    //Clear TX response flag
-                    //DPRINTLN("GOOD msg!!");
-                    //waiting_for_rx_response = false;
-                    //Clear timeout loops
-                //}
+                    parseMessage();
+                }
              }
              else {
                 rx_state = RESET_STATE;

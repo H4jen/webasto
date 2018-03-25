@@ -18,9 +18,33 @@ struct webasto_status
     int status_01 = 0;
     int status_03 = 0;
     int status_05 = 0;
+    int status_06 = 0;
     int status_07 = 0;
+    int status_08 = 0;
+    int status_0A = 0;
+    int temp = 0;
+    int status_0F = 0;
+
+    int status_10 = 0;
+    int power = 0;
+    int resistance = 0;
+    int comb_fan = 0;
+    int status_1F = 0;
+    int status_24 = 0;
+    int status_27 = 0;
+    int status_29 = 0;
+    int status_2A = 0;
+    int status_2C = 0;
+    int status_2D = 0;
+    int status_32 = 0;    
+    int status_34 = 0;
+    
+    //Status information
+    int voltage_mV = 0;
     
     //On-off flags (msg 50:03)
+    
+/*
     bool combustion_fan=false;
     bool glow_plug = false;
     bool fuel_pump = false;
@@ -35,7 +59,7 @@ struct webasto_status
     bool flameDet=false;
     int heatPower=0;
     int flameRes=0;
-    
+  */  
 };
 
 
@@ -84,7 +108,7 @@ class w_bus {
     //int wbus_ok=0;
     String subStringDataMsg(int index);
     //This function is called if a type 50 message is received (status)
-    void parseStatusData(int pos);
+    void parseStatusData();
     //struct webasto_status wbus_status;
     
    

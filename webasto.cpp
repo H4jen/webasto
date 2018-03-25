@@ -79,6 +79,7 @@ while(1) {
     current_tick = millis();
     
     //TX part of code.
+    
     switch(MAIN_STATE) {
      case START:
         MAIN_STATE = INIT_WBUS;
@@ -107,7 +108,7 @@ while(1) {
     
     // RX part of code.    
     //This is calles each loop, but only one byte is parsed each round
-    wbus.getSerialMessage();
+     wbus.getSerialMessage();
    
     //Always data all availible data from webasto if availible and push to wraparound buffer.
     while(Serial1.available()>0) {
@@ -115,10 +116,11 @@ while(1) {
     }
 
     
+    
     //Get command set
     cmd.getSerialMessage();
 
-
+    
     //Read one char from command interface if availible
     if (Serial.available()>0) {
         cmd.readSerialData();
